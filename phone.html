@@ -46,13 +46,14 @@ h1{margin:0;text-align:center;font-size:15px;letter-spacing:.10em}
 /* chat */
 .chatlog{display:flex;flex-direction:column;gap:9px;font-size:13px;line-height:1.55}
 .msg{max-width:78%;padding:8px 12px;border-radius:17px;position:relative}
-.msg.ke{ align-self:flex-start;background:#2a2c33;border-bottom-left-radius:5px}
-.msg.ay{ align-self:flex-end;background:#eee8df;color:#141414;border-bottom-right-radius:5px}
+.msg.ke{ align-self:flex-end;background:#8fe388;color:#12250e;border-bottom-right-radius:5px}
+.msg.ay{ align-self:flex-start;background:#2a2c33;border-bottom-left-radius:5px}
 .msg .tm{display:block;font-size:9px;color:#99a;margin-top:3px;text-align:right}
-.msg.ay .tm{color:#667}
-.msg.ay[contenteditable]{outline:1px dashed #b7ab8f;cursor:text}
+.msg.ke .tm{color:#3d6b34}
+.msg.ay[contenteditable]{outline:1px dashed #6a6e78;cursor:text}
 .daysep{text-align:center;color:#778;font-size:10px;margin:4px 0}
-.typing{align-self:flex-start;background:#2a2c33;border-radius:17px;border-bottom-left-radius:5px;padding:11px 14px;color:#99a;font-size:12px}
+.readmark{align-self:flex-end;font-size:9px;color:#8a8f98;margin:-6px 2px 0 0}
+.typing{align-self:flex-end;background:#8fe388;color:#2c5226;border-radius:17px;border-bottom-right-radius:5px;padding:11px 14px;font-size:12px}
 .chips{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .chips .lbl{font-size:10px;color:#889}
 .chip{background:#181a1f;border:1px solid #3a3d45;color:#eee8df;border-radius:15px;padding:10px 12px;font-size:12.5px;cursor:pointer;text-align:left}
@@ -84,12 +85,25 @@ h1{margin:0;text-align:center;font-size:15px;letter-spacing:.10em}
 .bsrow .n{text-align:right;color:#eee8df;font-weight:700}
 .bsnote{color:#666;font-size:10px;line-height:1.8;margin-top:10px}
 .foot{color:#666;font-size:10px;line-height:1.8;text-align:center;margin-top:16px}
+/* phone-width devices (e.g. iPhone 13): the phone fills the whole viewport,
+   page chrome hidden, scrolling happens inside the phone screen */
+@media(max-width:640px){
+  body{padding:0}
+  h1,.subtitle,.note-top,.foot{display:none}
+  .wrap{width:100%}
+  .phone{border:none;border-radius:0;padding:0;box-shadow:none}
+  .screen{border-radius:0;height:100dvh;min-height:100dvh}
+  .view{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .notch{display:none}
+  .bsbtn{margin:14px auto}
+  .bspanel{margin:0 12px 20px}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>PHONE PEEK</h1>
-<div class="subtitle">黒川慧のスマホ — 場面：会った日の夜 23:47（試作 v0.1）</div>
+<div class="subtitle">黒川慧のスマホ — 場面：会った日の夜 23:47（試作 v0.2）</div>
 <div class="note-top">本人のスマホを覗く形式の試作。彩音のセリフは仮置きサンプルで、タップして自分で書き換えられる（AYANE_CONTROL=USER）。<br>慧の台詞・メモ・履歴は資料（v4／人物カード）準拠の生成サンプル。</div>
 
 <div class="phone"><div class="screen">
@@ -137,6 +151,7 @@ h1{margin:0;text-align:center;font-size:15px;letter-spacing:.10em}
     <div class="msg ke">傘持ってないんか。こっち来い<span class="tm">16:20</span></div>
     <div class="msg ay" contenteditable="true" title="タップで書き換え可">慧の傘、大きいね（サンプル）<span class="tm">16:21</span></div>
     <div class="msg ke">送る。着いたら連絡しろ<span class="tm">23:12</span></div>
+    <div class="readmark">既読</div>
     <div class="msg ay" contenteditable="true" title="タップで書き換え可">着いたら連絡してって言ったのそっち…（サンプル）<span class="tm">23:41</span></div>
   </div>
   <div id="chatInteract">
