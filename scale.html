@@ -22,16 +22,8 @@ h1{margin:0;text-align:center;font-size:16px;letter-spacing:.10em}
 .stat .v{font-size:20px;font-weight:800;color:#eee8df}
 .stat .k{font-size:10px;color:#888;margin-top:2px;line-height:1.5}
 /* silhouette */
-.stage{display:flex;align-items:flex-end;justify-content:center;gap:56px;height:390px;border-bottom:2px solid #333;position:relative}
-.fig{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
-.fig .head{border-radius:50%;background:#eee8df;flex:none}
-.fig.man .head{background:#8f8578}
-.fig .torso{border-radius:14px 14px 6px 6px;background:#eee8df;flex:none;opacity:.92}
-.fig.man .torso{background:#8f8578}
-.fig .legs{width:46%;background:#3a3a3a;border-radius:0 0 8px 8px;flex:none}
-.fig .label{margin-top:8px;font-size:12px;text-align:center;line-height:1.6}
-.fig .label b{font-size:13px}
-.fig .label span{color:#999;font-size:11px}
+.sil-wrap{width:min(620px,100%);margin:auto}
+.sil-wrap svg{display:block;width:100%;height:auto}
 .reach{text-align:center;color:#aaa;font-size:11px;line-height:1.8;margin-top:12px}
 .reach b{color:#eee8df}
 /* bars */
@@ -61,13 +53,13 @@ tr.row{cursor:pointer}
 tr.row:hover td{background:#181818}
 tr.row.active td{background:#242019;color:#eee8df;font-weight:700}
 .foot{color:#666;font-size:10px;line-height:1.8;text-align:center;margin-top:10px}
-@media(max-width:600px){.stage{gap:28px;height:340px}.bar-row{grid-template-columns:70px 1fr 96px}}
+@media(max-width:600px){.bar-row{grid-template-columns:70px 1fr 96px}}
 </style>
 </head>
 <body>
 <div class="app">
 <h1>PHYSICAL DIFFERENCE PROFILE</h1>
-<div class="subtitle">Height × Shoulder × Hand × Grip × Hand Scale — 体格差コンパレータ試作 v0.1</div>
+<div class="subtitle">Height × Shoulder × Hand × Grip × Hand Scale — 体格差コンパレータ試作 v0.2</div>
 <div class="note-top">数値は Physical Relationship Profile v4（正本）の中央値で表示。範囲のある項目は「約」。</div>
 
 <div class="panel person-panel" id="chips"></div>
@@ -76,16 +68,7 @@ tr.row.active td{background:#242019;color:#eee8df;font-weight:700}
 <h2 id="pairTitle">—</h2>
 <div class="desc" id="pairCore">—</div>
 <div class="big-diff" id="bigDiff"></div>
-<div class="stage">
-  <div class="fig" id="figA">
-    <div class="head"></div><div class="torso"></div><div class="legs" style="height:70px"></div>
-    <div class="label"><b>佐倉彩音</b><br><span>145cm / 約42.5kg<br>肩幅 約35.5cm</span></div>
-  </div>
-  <div class="fig man" id="figM">
-    <div class="head"></div><div class="torso"></div><div class="legs" style="height:70px"></div>
-    <div class="label" id="manLabel">—</div>
-  </div>
-</div>
+<div class="sil-wrap"><svg id="silSvg" viewBox="0 0 560 424" xmlns="http://www.w3.org/2000/svg"></svg></div>
 <div class="reach" id="reachText">—</div>
 </div>
 
@@ -148,13 +131,73 @@ let current="kei";
 const $=id=>document.getElementById(id);
 function fmt(n,d=1){return n.toFixed(d)}
 function signed(n,suffix){return (n>0?"+":"")+fmt(n,Math.abs(n)<10&&n%1!==0?1:0)+suffix}
-function setFig(el,h,shoulder){
-  const scale=1.82; const H=h*scale; const headD=h*scale*0.115;
-  const torsoH=H*0.52, legsH=70;
-  const head=el.querySelector(".head"), torso=el.querySelector(".torso");
-  head.style.width=headD+"px"; head.style.height=headD+"px";
-  torso.style.width=(shoulder*2.05)+"px"; torso.style.height=torsoH+"px";
-  el.querySelector(".legs").style.height=legsH+"px";
+/* ---- realistic silhouette (SVG, proportions driven by the profile data) ---- */
+function smoothPath(pts){
+  // Catmull-Rom -> cubic bezier through all points
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)];
+    const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+    const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0]} ${p2[1]}`;
+  }
+  return d;
+}
+function figureSVG(cx,baseline,p,female,color){
+  const s=1.92, h=p.height;
+  const top=baseline-h*s;
+  const X=off=>+(cx+off*s).toFixed(1), Y=d=>+(top+d*s).toFixed(1);
+  const headH=h/7.6, headW=female?14.5:15.5, neckW=female?8.6:11;
+  const chestW=p.chest/2.95, waistW=p.waist/2.85, hipW=p.hip/2.85;
+  const thighW=p.thigh/3.05, legC=hipW/4+0.6;
+  const kneeW=thighW*0.60, calfW=thighW*0.74, ankleW=thighW*0.36;
+  const armW=p.upperArm/3.05;
+  const bodyH=h-headH;
+  const dNeck=headH*0.98, dSh=headH*1.10, dChest=headH+bodyH*0.20, dWaist=headH+bodyH*0.335, dHip=headH+bodyH*0.435, dCrotch=headH+bodyH*0.52;
+  // right contour: neck -> shoulder -> chest -> waist -> hip -> leg -> foot -> inner leg -> crotch
+  const R=[
+    [neckW/2,dNeck],[p.shoulder/2-1.2,dSh],[chestW/2,dChest],[waistW/2,dWaist],[hipW/2,dHip],
+    [legC+thighW/2,headH+bodyH*0.56],[legC+kneeW/2,headH+bodyH*0.735],[legC+calfW/2,headH+bodyH*0.83],
+    [legC+ankleW/2,h-8],[legC+4.6,h-2.2],[legC+4.4,h-0.1],[legC-4.0,h-0.1],[legC-3.4,h-2.4],
+    [legC-ankleW/2,h-8],[legC-thighW/2+1.6,headH+bodyH*0.60],[1.0,dCrotch]
+  ];
+  const ptsR=R.map(q=>[X(q[0]),Y(q[1])]);
+  const ptsL=R.slice(0,-1).reverse().map(q=>[X(-q[0]),Y(q[1])]);
+  const torso=smoothPath(ptsR.concat(ptsL))+" Z";
+  // arms: thick rounded strokes behind torso, shoulder -> fingertip beside hip/thigh
+  const armY1=Y(dSh+1.5), armY2=Y(headH+bodyH*0.60);
+  const armRx=X(p.shoulder/2+armW*0.28), armLx=X(-(p.shoulder/2+armW*0.28));
+  const handRx=X(hipW/2+armW*0.42), handLx=X(-(hipW/2+armW*0.42));
+  const armWpx=(armW*s).toFixed(1);
+  let out="";
+  if(female){
+    // hair: mass behind head/shoulders down to chest
+    const hx=X(0), hTop=Y(-0.6), hBot=Y(headH+7.5), hr=(headW/2+2.6)*s;
+    out+=`<path d="M ${hx-hr} ${hBot} C ${hx-hr-2} ${Y(headH*0.4)}, ${hx-hr*0.7} ${hTop}, ${hx} ${hTop} C ${hx+hr*0.7} ${hTop}, ${hx+hr+2} ${Y(headH*0.4)}, ${hx+hr} ${hBot} C ${hx+hr*0.45} ${hBot+7}, ${hx-hr*0.45} ${hBot+7}, ${hx-hr} ${hBot} Z" fill="#4a4038"/>`;
+  }
+  out+=`<path d="M ${armRx} ${armY1} L ${handRx} ${armY2}" stroke="${color}" stroke-width="${armWpx}" stroke-linecap="round" fill="none"/>`;
+  out+=`<path d="M ${armLx} ${armY1} L ${handLx} ${armY2}" stroke="${color}" stroke-width="${armWpx}" stroke-linecap="round" fill="none"/>`;
+  out+=`<rect x="${X(-neckW/2)}" y="${Y(headH*0.72)}" width="${(neckW*s).toFixed(1)}" height="${(headH*0.42*s).toFixed(1)}" fill="${color}"/>`;
+  out+=`<path d="${torso}" fill="${color}"/>`;
+  out+=`<ellipse cx="${X(0)}" cy="${Y(headH*0.46)}" rx="${(headW/2*s).toFixed(1)}" ry="${(headH*0.52*s).toFixed(1)}" fill="${color}"/>`;
+  if(female){ out+=`<path d="M ${X(-headW/2-0.6)} ${Y(headH*0.30)} C ${X(-headW/2-1.2)} ${Y(-0.8)}, ${X(headW/2+1.2)} ${Y(-0.8)}, ${X(headW/2+0.6)} ${Y(headH*0.30)} C ${X(headW*0.2)} ${Y(headH*0.02)}, ${X(-headW*0.2)} ${Y(headH*0.02)}, ${X(-headW/2-0.6)} ${Y(headH*0.30)} Z" fill="#4a4038"/>`; }
+  return out;
+}
+function renderSilhouette(m){
+  const baseline=372;
+  const aTop=baseline-AYANE.height*1.92;
+  let svg="";
+  svg+=`<line x1="30" y1="${baseline}" x2="530" y2="${baseline}" stroke="#333" stroke-width="2"/>`;
+  svg+=figureSVG(155,baseline,AYANE,true,"#eee8df");
+  svg+=figureSVG(405,baseline,m,false,"#9a8f80");
+  // Ayane head-top guide line across to the man's body
+  svg+=`<line x1="155" y1="${aTop.toFixed(1)}" x2="405" y2="${aTop.toFixed(1)}" stroke="#eee8df" stroke-width="1" stroke-dasharray="5 5" opacity="0.55"/>`;
+  svg+=`<circle cx="405" cy="${aTop.toFixed(1)}" r="3.5" fill="#eee8df"/>`;
+  svg+=`<text x="155" y="396" fill="#eee" font-size="13" font-weight="700" text-anchor="middle">佐倉彩音</text>`;
+  svg+=`<text x="155" y="414" fill="#999" font-size="11" text-anchor="middle">145cm / 約42.5kg / 肩幅 約35.5cm</text>`;
+  svg+=`<text x="405" y="396" fill="#eee" font-size="13" font-weight="700" text-anchor="middle">${m.name}</text>`;
+  svg+=`<text x="405" y="414" fill="#999" font-size="11" text-anchor="middle">${m.height}cm / 約${m.weight}kg / 肩幅 約${fmt(m.shoulder)}cm</text>`;
+  $("silSvg").innerHTML=svg;
 }
 function bars(el,rows){
   el.innerHTML=rows.map(r=>{
@@ -175,9 +218,7 @@ function render(){
     ["約"+fmt((m.grip/AYANE.grip),1)+"倍","握力<br>約"+AYANE.grip+" → 約"+m.grip+"kg"],
     [fmt(m.diffResp,1)+" / 10","Physical Difference<br>本人の感応度"]
   ].map(x=>`<div class="stat"><div class="v">${x[0]}</div><div class="k">${x[1]}</div></div>`).join("");
-  setFig($("figA"),AYANE.height,AYANE.shoulder);
-  setFig($("figM"),m.height,m.shoulder);
-  $("manLabel").innerHTML=`<b>${m.name}</b><br><span>${m.height}cm / 約${m.weight}kg<br>肩幅 約${fmt(m.shoulder)}cm</span>`;
+  renderSilhouette(m);
   const ratio=AYANE.height/m.height;
   const zone=ratio>0.835?"肩の下〜胸の上あたり":ratio>0.815?"胸の上あたり":"胸あたり";
   $("reachText").innerHTML=`彩音の頭頂は、相手の <b>${zone}</b>（身長比 ${fmt(ratio*100,0)}%）。<br>肩幅差は <b>${signed(m.shoulder-AYANE.shoulder,"cm")}</b>。正面から抱えられると、彩音の肩幅は相手の胸幅の中にほぼ収まる。`;
