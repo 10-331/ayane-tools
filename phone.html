@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Phone Peek — 黒川慧のスマホ（試作）</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#050505;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:22px 12px 50px}
+.wrap{width:min(430px,100%);margin:auto}
+h1{margin:0;text-align:center;font-size:15px;letter-spacing:.10em}
+.subtitle{margin:7px 0 4px;text-align:center;color:#999;font-size:11px;line-height:1.6}
+.note-top{text-align:center;color:#666;font-size:10px;margin-bottom:16px;line-height:1.7}
+.phone{background:#0b0b0d;border:1px solid #333;border-radius:44px;padding:12px;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.screen{background:linear-gradient(180deg,#1a1d24,#0d0f13);border-radius:34px;overflow:hidden;min-height:640px;display:flex;flex-direction:column;position:relative}
+.statusbar{display:flex;justify-content:space-between;padding:10px 20px 4px;font-size:12px;color:#ddd}
+.notch{width:110px;height:22px;background:#000;border-radius:12px;margin:0 auto}
+.view{flex:1;display:none;flex-direction:column;padding:8px 16px 18px}
+.view.active{display:flex}
+/* lock */
+.locktime{text-align:center;margin-top:44px}
+.locktime .t{font-size:64px;font-weight:200;letter-spacing:.02em}
+.locktime .d{font-size:14px;color:#bbb}
+.notif{background:rgba(38,40,46,.92);border-radius:18px;padding:10px 12px;margin-top:12px;font-size:12px;line-height:1.6}
+.notif b{font-size:12px}
+.notif .app{color:#9aa;font-size:10px;letter-spacing:.06em}
+.notif .time{float:right;color:#889;font-size:10px}
+.unlock{margin-top:auto;text-align:center;color:#aab;font-size:12px;padding:16px 0 6px;cursor:pointer}
+.unlock .bar{width:130px;height:4px;background:#ccd;border-radius:99px;margin:10px auto 0;opacity:.7}
+/* home */
+.greet{margin-top:14px;font-size:12px;color:#aab;line-height:1.7}
+.greet b{color:#eee;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px;margin-top:20px}
+.appicon{text-align:center;cursor:pointer;position:relative}
+.appicon .ic{width:56px;height:56px;border-radius:15px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:25px;background:#24262c;border:1px solid #34363c}
+.appicon .nm{font-size:10px;color:#ccd;margin-top:5px}
+.appicon.dim{opacity:.38;cursor:default}
+.badge{position:absolute;top:-5px;right:8px;background:#e5484d;color:#fff;font-size:10px;font-weight:700;min-width:19px;height:19px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.dock{margin-top:auto;background:rgba(36,38,44,.85);border-radius:24px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.homehint{text-align:center;color:#778;font-size:10px;margin-top:12px;line-height:1.7}
+/* app generic */
+.apphead{display:flex;align-items:center;gap:10px;padding:6px 0 12px;border-bottom:1px solid #26282e;margin-bottom:12px}
+.back{background:#24262c;border:1px solid #34363c;color:#eee;border-radius:12px;padding:6px 11px;cursor:pointer;font-size:12px}
+.apphead .ttl{font-weight:700;font-size:14px}
+.apphead .sub{color:#889;font-size:10px}
+/* chat */
+.chatlog{display:flex;flex-direction:column;gap:9px;font-size:13px;line-height:1.55}
+.msg{max-width:78%;padding:8px 12px;border-radius:17px;position:relative}
+.msg.ke{ align-self:flex-start;background:#2a2c33;border-bottom-left-radius:5px}
+.msg.ay{ align-self:flex-end;background:#eee8df;color:#141414;border-bottom-right-radius:5px}
+.msg .tm{display:block;font-size:9px;color:#99a;margin-top:3px;text-align:right}
+.msg.ay .tm{color:#667}
+.msg.ay[contenteditable]{outline:1px dashed #b7ab8f;cursor:text}
+.daysep{text-align:center;color:#778;font-size:10px;margin:4px 0}
+.typing{align-self:flex-start;background:#2a2c33;border-radius:17px;border-bottom-left-radius:5px;padding:11px 14px;color:#99a;font-size:12px}
+.chips{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.chips .lbl{font-size:10px;color:#889}
+.chip{background:#181a1f;border:1px solid #3a3d45;color:#eee8df;border-radius:15px;padding:10px 12px;font-size:12.5px;cursor:pointer;text-align:left}
+.chip:hover{border-color:#eee8df}
+.chatnote{font-size:10px;color:#778;line-height:1.7;margin-top:12px}
+/* memo */
+.memo{background:#17181d;border:1px solid #26282e;border-radius:15px;padding:12px 14px;margin-bottom:10px;font-size:13px;line-height:1.8;white-space:pre-wrap}
+.memo .dt{color:#889;font-size:10px;margin-bottom:4px;letter-spacing:.05em}
+.memo .tag{display:inline-block;background:#24262c;border-radius:8px;padding:1px 7px;font-size:10px;color:#bbc;margin-left:6px}
+/* search */
+.srow{display:flex;gap:11px;padding:11px 2px;border-bottom:1px solid #22242a;font-size:13px;align-items:baseline}
+.srow .st{color:#778;font-size:10px;min-width:38px}
+.srow .del{color:#99a;font-size:10px}
+.srow.hot .sq{color:#eee8df;font-weight:700}
+/* health */
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hcard{background:#17181d;border:1px solid #26282e;border-radius:15px;padding:13px}
+.hcard .v{font-size:23px;font-weight:800;color:#eee8df}
+.hcard .k{font-size:10px;color:#889;margin-top:3px;line-height:1.6}
+/* backstage */
+.bsbtn{margin:14px auto 0;display:block;background:#24262c;border:1px solid #444;color:#eee;border-radius:16px;padding:9px 18px;cursor:pointer;font-size:12px}
+.bspanel{display:none;background:#101010;border:1px solid #2a2a2a;border-radius:20px;padding:16px;margin-top:14px}
+.bspanel.active{display:block}
+.bspanel h2{margin:0 0 4px;font-size:12px;letter-spacing:.08em}
+.bspanel .desc{color:#888;font-size:10.5px;line-height:1.7;margin-bottom:12px}
+.bsrow{display:grid;grid-template-columns:118px 1fr 30px;gap:9px;align-items:center;font-size:11px;margin:8px 0;color:#ccc}
+.bsbar{height:9px;background:#222;border-radius:99px;overflow:hidden}
+.bsbar i{display:block;height:100%;background:#eee8df;border-radius:99px;transition:width .6s ease}
+.bsrow .n{text-align:right;color:#eee8df;font-weight:700}
+.bsnote{color:#666;font-size:10px;line-height:1.8;margin-top:10px}
+.foot{color:#666;font-size:10px;line-height:1.8;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>PHONE PEEK</h1>
+<div class="subtitle">黒川慧のスマホ — 場面：会った日の夜 23:47（試作 v0.1）</div>
+<div class="note-top">本人のスマホを覗く形式の試作。彩音のセリフは仮置きサンプルで、タップして自分で書き換えられる（AYANE_CONTROL=USER）。<br>慧の台詞・メモ・履歴は資料（v4／人物カード）準拠の生成サンプル。</div>
+
+<div class="phone"><div class="screen">
+<div><div class="notch"></div><div class="statusbar"><span>23:47</span><span>5G ▂▄▆ 🔋</span></div></div>
+
+<!-- LOCK -->
+<div class="view active" id="v-lock">
+  <div class="locktime"><div class="d">11月7日 土曜日</div><div class="t">23:47</div></div>
+  <div class="notif"><span class="app">LINE</span><span class="time">23:41</span><br><b>あやね</b>　着いたら連絡してって言ったのそっち…</div>
+  <div class="notif"><span class="app">LINE（仕事）</span><span class="time">21:15</span><br><b>現場グループ</b>　月曜の段取り、朝一で共有します</div>
+  <div class="notif"><span class="app">ヘルスケア</span><span class="time">23:30</span><br>今日の歩数 18,240歩。目標を達成しました</div>
+  <div class="unlock" id="unlockBtn">タップでロック解除<div class="bar"></div></div>
+</div>
+
+<!-- HOME -->
+<div class="view" id="v-home">
+  <div class="greet"><b>黒川 慧</b>　自宅<br>アプリはタップで開く。中身はこの場面の状態で固定。</div>
+  <div class="grid">
+    <div class="appicon" data-open="v-chat"><div class="ic">💬</div><div class="nm">LINE</div><div class="badge">1</div></div>
+    <div class="appicon" data-open="v-memo"><div class="ic">📝</div><div class="nm">メモ</div></div>
+    <div class="appicon" data-open="v-search"><div class="ic">🧭</div><div class="nm">Safari</div></div>
+    <div class="appicon" data-open="v-health"><div class="ic">❤️</div><div class="nm">ヘルスケア</div></div>
+    <div class="appicon dim"><div class="ic">🖼️</div><div class="nm">写真</div></div>
+    <div class="appicon dim"><div class="ic">📅</div><div class="nm">カレンダー</div></div>
+    <div class="appicon dim"><div class="ic">🎵</div><div class="nm">音楽</div></div>
+    <div class="appicon dim"><div class="ic">⚙️</div><div class="nm">設定</div></div>
+  </div>
+  <div class="homehint">写真・カレンダー・音楽・設定は試作では未実装（型が固まったら中身を足す）</div>
+  <div class="dock">
+    <div class="appicon"><div class="ic">📞</div><div class="nm">電話</div></div>
+    <div class="appicon" data-open="v-search"><div class="ic">🧭</div><div class="nm">Safari</div></div>
+    <div class="appicon" data-open="v-chat"><div class="ic">💬</div><div class="nm">LINE</div></div>
+    <div class="appicon"><div class="ic">✉️</div><div class="nm">メール</div></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="view" id="v-chat">
+  <div class="apphead"><button class="back" data-open="v-home">‹ 戻る</button><div><div class="ttl">あやね</div><div class="sub">LINE — 今日のやり取り</div></div></div>
+  <div class="chatlog" id="chatlog">
+    <div class="daysep">今日</div>
+    <div class="msg ke">駅着いたら迎え行く。改札出たとこ<span class="tm">11:58</span></div>
+    <div class="msg ay" contenteditable="true" title="タップで書き換え可">着いたよ〜 改札出るね（サンプル）<span class="tm">12:03</span></div>
+    <div class="msg ke">見えた。そのまま止まっとれ<span class="tm">12:04</span></div>
+    <div class="msg ke">傘持ってないんか。こっち来い<span class="tm">16:20</span></div>
+    <div class="msg ay" contenteditable="true" title="タップで書き換え可">慧の傘、大きいね（サンプル）<span class="tm">16:21</span></div>
+    <div class="msg ke">送る。着いたら連絡しろ<span class="tm">23:12</span></div>
+    <div class="msg ay" contenteditable="true" title="タップで書き換え可">着いたら連絡してって言ったのそっち…（サンプル）<span class="tm">23:41</span></div>
+  </div>
+  <div id="chatInteract">
+    <div class="chips"><div class="lbl">彩音の返信を選ぶ（選んだ分だけが確定する）</div>
+      <button class="chip" data-reply="a">着いたよ</button>
+      <button class="chip" data-reply="b">まだ電車。あと少し</button>
+      <button class="chip" data-reply="c">もう少し話したかったな</button>
+    </div>
+  </div>
+  <div class="chatnote">※ 彩音の既存メッセージは仮置きサンプル（枠内タップで編集可）。新規の返信はチップで選ぶまで慧は動かない。</div>
+</div>
+
+<!-- MEMO -->
+<div class="view" id="v-memo">
+  <div class="apphead"><button class="back" data-open="v-home">‹ 戻る</button><div><div class="ttl">メモ</div><div class="sub">本人の記録。文章は短い</div></div></div>
+  <div class="memo"><div class="dt">11/7 23:20</div>送った。駅で振り返るの3回。
+紅茶、苦手かと思ったけど飲んどった。次もあの店でいい。</div>
+  <div class="memo"><div class="dt">11/7 18:05</div>傘、一本でだいたい収まる。左側に置くと落ち着く。右やと肩に力入っとる。</div>
+  <div class="memo"><div class="dt">10/26</div>手首は細い。引く時は指一本分緩める。
+声は我慢しとる時ほど大きい。止めるな。</div>
+  <div class="memo"><div class="dt">10/19</div>首の後ろ触ると肩すくむ。嫌がっとるんやない。
+次、髪触る時は先に言う。</div>
+  <div class="memo"><div class="dt">仕事<span class="tag">現場</span></div><div class="dt">11/6</div>月曜、足場の段取り変更。朝一確認。
+雨の日は工程ずらす。無理に詰めるな。</div>
+</div>
+
+<!-- SEARCH -->
+<div class="view" id="v-search">
+  <div class="apphead"><button class="back" data-open="v-home">‹ 戻る</button><div><div class="ttl">Safari</div><div class="sub">履歴 — 今日</div></div></div>
+  <div class="srow"><span class="st">23:38</span><span class="sq">小柄な女性 体格差 抱き上げる 注意点</span></div>
+  <div class="srow"><span class="st">23:35</span><span class="sq">手首 細い 握る 力 加減</span></div>
+  <div class="srow"><span class="st">22:50</span><span class="sq">鶏むね肉 低温調理 時間 63度</span></div>
+  <div class="srow"><span class="st">21:02</span><span class="sq">紅茶 苦くない 入れ方</span></div>
+  <div class="srow"><span class="st">17:44</span><span class="sq">駅前 駐輪場 混雑 何時</span></div>
+  <div class="srow"><span class="st">09:12</span><span class="sq">足場 段取り変更 連絡 テンプレ</span></div>
+  <div class="srow hot"><span class="st">削除済</span><span class="sq">彼女 送ったあと 連絡 早すぎる</span><span class="del">（履歴から削除された形跡）</span></div>
+</div>
+
+<!-- HEALTH -->
+<div class="view" id="v-health">
+  <div class="apphead"><button class="back" data-open="v-home">‹ 戻る</button><div><div class="ttl">ヘルスケア</div><div class="sub">今日 / 昨夜</div></div></div>
+  <div class="hgrid">
+    <div class="hcard"><div class="v">18,240</div><div class="k">歩数（歩）— 現場＋今日の外出</div></div>
+    <div class="hcard"><div class="v">6時間08分</div><div class="k">昨夜の睡眠 — 短め。今日は持った方</div></div>
+    <div class="hcard"><div class="v">62 bpm</div><div class="k">安静時心拍</div></div>
+    <div class="hcard"><div class="v">23:47</div><div class="k">最終計測 — まだ起きとる</div></div>
+  </div>
+  <div class="chatnote">※ 数値は場面の演出サンプル。実データとは無関係。</div>
+</div>
+
+</div></div>
+
+<button class="bsbtn" id="bsToggle">裏側ステータスを見る</button>
+<div class="bspanel" id="bsPanel">
+<h2>BACKSTAGE STATE — 黒川慧（この場面）</h2>
+<div class="desc">AIチャットの裏側表示の逆輸入。固定の性格値やなくて「今夜」の状態。チャットの選択で少し動く。</div>
+<div id="bsRows"></div>
+<div class="bsnote">基準（Baseline／v4）：彩音固有欲求 8.4、自制 7.5、行為後の密着欲 9.5。STATEは場面ごとに変わるもので、人物の確定値ではない。</div>
+</div>
+
+<div class="foot">出典：Physical Relationship Profile v4／人物カード（黒川慧）。このページは資料ベースの試作ツールで、彩音の発言・感情はユーザーが確定する。</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function show(id){ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id)); }
+$("unlockBtn").addEventListener("click",()=>show("v-home"));
+document.querySelectorAll("[data-open]").forEach(el=>el.addEventListener("click",()=>{ if(!el.classList.contains("dim")) show(el.dataset.open); }));
+
+/* backstage state */
+const BS=[
+ {k:"desire", name:"彩音固有欲求（現在）", v:9.1},
+ {k:"load", name:"自制負荷", v:6.5},
+ {k:"contact", name:"接触欲（送った後）", v:9.3},
+ {k:"lead", name:"主導欲", v:7.0},
+ {k:"reluct", name:"終了への未練", v:8.0},
+ {k:"sleep", name:"眠気", v:2.5}
+];
+function renderBS(){
+ $("bsRows").innerHTML=BS.map(r=>`<div class="bsrow"><div>${r.name}</div><div class="bsbar"><i style="width:${r.v*10}%"></i></div><div class="n">${r.v.toFixed(1)}</div></div>`).join("");
+}
+renderBS();
+$("bsToggle").addEventListener("click",()=>{ $("bsPanel").classList.toggle("active"); });
+
+/* chat interaction */
+const REPLIES={
+ a:{ay:"着いたよ", ke:["そか。風呂入って早く寝ろ","……今日は、悪くなかったわ"], d:{sleep:1.0,load:-0.5}},
+ b:{ay:"まだ電車。あと少し", ke:["着くまで起きとるけぇ、着いたら言え"], d:{reluct:0.6,contact:0.4}},
+ c:{ay:"もう少し話したかったな", ke:["……俺もや","次は泊まれる日にしろ。送るの、面倒や"], d:{desire:0.5,load:1.0,reluct:0.9}}
+};
+let answered=false;
+document.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
+ if(answered) return; answered=true;
+ const r=REPLIES[ch.dataset.reply];
+ const log=$("chatlog");
+ const ay=document.createElement("div"); ay.className="msg ay"; ay.textContent=r.ay;
+ const tm=document.createElement("span"); tm.className="tm"; tm.textContent="23:48"; ay.appendChild(tm); log.appendChild(ay);
+ $("chatInteract").innerHTML="";
+ const ty=document.createElement("div"); ty.className="typing"; ty.textContent="慧 が入力中…"; log.appendChild(ty);
+ let i=0;
+ function next(){
+   if(i===0) ty.remove();
+   if(i<r.ke.length){
+     const ke=document.createElement("div"); ke.className="msg ke"; ke.textContent=r.ke[i];
+     const t2=document.createElement("span"); t2.className="tm"; t2.textContent="23:49"; ke.appendChild(t2); log.appendChild(ke);
+     i++; setTimeout(next, 900);
+   } else {
+     for(const k in r.d){ const row=BS.find(x=>x.k===k); if(row) row.v=Math.max(0,Math.min(10,row.v+r.d[k])); }
+     renderBS();
+     const done=document.createElement("div"); done.className="chatnote"; done.textContent="裏側ステータスが更新された（下のボタンから確認できる）。"; log.appendChild(done);
+   }
+ }
+ setTimeout(next, 1100);
+}));
+</script>
+</body>
+</html>
