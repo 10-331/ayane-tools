@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Physical Difference Profile — Hand Scale Comparator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#050505;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:22px 12px 50px}
+.app{width:min(1080px,100%);margin:auto}
+h1{margin:0;text-align:center;font-size:16px;letter-spacing:.10em}
+.subtitle{margin:7px 0 6px;text-align:center;color:#999;font-size:11px;line-height:1.6}
+.note-top{text-align:center;color:#666;font-size:10px;margin-bottom:18px}
+.panel{background:#101010;border:1px solid #2a2a2a;border-radius:20px;padding:16px;margin-bottom:14px}
+.panel h2{margin:0 0 4px;font-size:13px;letter-spacing:.08em}
+.panel .desc{color:#888;font-size:11px;line-height:1.7;margin-bottom:14px}
+.person-panel{display:flex;flex-wrap:wrap;justify-content:center;gap:9px}
+.person-chip{border:1px solid #444;background:#242424;color:#eee;padding:8px 14px;border-radius:18px;font-size:12px;cursor:pointer}
+.person-chip.active{background:#eee8df;color:#111;border-color:#eee8df;font-weight:700}
+.big-diff{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:4px 0 14px}
+.stat{background:#181818;border:1px solid #2c2c2c;border-radius:14px;padding:10px 14px;text-align:center;min-width:104px}
+.stat .v{font-size:20px;font-weight:800;color:#eee8df}
+.stat .k{font-size:10px;color:#888;margin-top:2px;line-height:1.5}
+/* silhouette */
+.stage{display:flex;align-items:flex-end;justify-content:center;gap:56px;height:390px;border-bottom:2px solid #333;position:relative}
+.fig{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.fig .head{border-radius:50%;background:#eee8df;flex:none}
+.fig.man .head{background:#8f8578}
+.fig .torso{border-radius:14px 14px 6px 6px;background:#eee8df;flex:none;opacity:.92}
+.fig.man .torso{background:#8f8578}
+.fig .legs{width:46%;background:#3a3a3a;border-radius:0 0 8px 8px;flex:none}
+.fig .label{margin-top:8px;font-size:12px;text-align:center;line-height:1.6}
+.fig .label b{font-size:13px}
+.fig .label span{color:#999;font-size:11px}
+.reach{text-align:center;color:#aaa;font-size:11px;line-height:1.8;margin-top:12px}
+.reach b{color:#eee8df}
+/* bars */
+.bar-row{display:grid;grid-template-columns:86px 1fr 118px;gap:10px;align-items:center;margin:9px 0;font-size:11px}
+.bar-row .name{color:#ccc}
+.track{height:14px;background:#222;border-radius:999px;position:relative;overflow:visible}
+.fill-a{position:absolute;left:0;top:0;height:14px;background:#eee8df;border-radius:999px}
+.fill-m{position:absolute;left:0;top:0;height:14px;background:#8f8578;border-radius:999px;opacity:.55}
+.bar-row .val{color:#999;font-size:10px;line-height:1.5}
+.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 10px;vertical-align:middle}
+/* handscale */
+.scale-wrap{display:flex;flex-wrap:wrap;gap:22px;align-items:center;justify-content:center}
+.shape-box{text-align:center}
+.shape-cap{color:#888;font-size:10px;line-height:1.7;margin-top:8px}
+.gauge{flex:1;min-width:260px}
+.gauge-track{position:relative;height:18px;background:linear-gradient(90deg,#2e4a3a,#4a4433,#5a332b);border-radius:999px;margin:26px 0 8px}
+.gauge-mark{position:absolute;top:-7px;width:2px;height:32px;background:#eee}
+.gauge-mark span{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;color:#aaa;white-space:nowrap}
+.gauge-dot{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:#eee8df;border:3px solid #111;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #eee8df}
+.gauge-labels{display:flex;justify-content:space-between;color:#777;font-size:10px}
+.verdict{background:#181818;border:1px solid #333;border-radius:14px;padding:12px 14px;font-size:12px;line-height:1.9;color:#ddd;margin-top:14px}
+.verdict b{color:#eee8df}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{padding:8px 6px;border-bottom:1px solid #262626;text-align:center;color:#ccc}
+th{color:#888;font-weight:600}
+tr.row{cursor:pointer}
+tr.row:hover td{background:#181818}
+tr.row.active td{background:#242019;color:#eee8df;font-weight:700}
+.foot{color:#666;font-size:10px;line-height:1.8;text-align:center;margin-top:10px}
+@media(max-width:600px){.stage{gap:28px;height:340px}.bar-row{grid-template-columns:70px 1fr 96px}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>PHYSICAL DIFFERENCE PROFILE</h1>
+<div class="subtitle">Height × Shoulder × Hand × Grip × Hand Scale — 体格差コンパレータ試作 v0.1</div>
+<div class="note-top">数値は Physical Relationship Profile v4（正本）の中央値で表示。範囲のある項目は「約」。</div>
+
+<div class="panel person-panel" id="chips"></div>
+
+<div class="panel">
+<h2 id="pairTitle">—</h2>
+<div class="desc" id="pairCore">—</div>
+<div class="big-diff" id="bigDiff"></div>
+<div class="stage">
+  <div class="fig" id="figA">
+    <div class="head"></div><div class="torso"></div><div class="legs" style="height:70px"></div>
+    <div class="label"><b>佐倉彩音</b><br><span>145cm / 約42.5kg<br>肩幅 約35.5cm</span></div>
+  </div>
+  <div class="fig man" id="figM">
+    <div class="head"></div><div class="torso"></div><div class="legs" style="height:70px"></div>
+    <div class="label" id="manLabel">—</div>
+  </div>
+</div>
+<div class="reach" id="reachText">—</div>
+</div>
+
+<div class="panel">
+<h2>BODY — 身体寸法の重なり</h2>
+<div class="desc">バーを重ねて表示（<span class="legend-dot" style="background:#eee8df"></span>彩音 / <span class="legend-dot" style="background:#8f8578"></span>相手）。長い方がそのまま差になる。</div>
+<div id="bodyBars"></div>
+</div>
+
+<div class="panel">
+<h2>HAND — 手の重なり</h2>
+<div class="desc">手長・手幅・中指長。彩音の手は手長 約16cm／中指 7.0cm が全比較の基準。</div>
+<div id="handBars"></div>
+<div class="verdict" id="handVerdict">—</div>
+</div>
+
+<div class="panel">
+<h2>HAND SCALE — 彩音の手で握った時</h2>
+<div class="desc">勃起時の竿部最大周径を、実測キャリブレーション（8.0cm＝かなり余裕／13.0cm＝指を深く巻き込み少し力を入れて親指と中指がギリギリ接触）と並べたもの。左の図は部位別周径（根元／中央／亀頭直下／亀頭最大）から作った断面の太さの変化で、太さが落ちにくい人ほど真っ直ぐな形になる。<br>※剛体円筒での実測が基準で、人体の形状・軟部組織とは一致しないため指位置は近似。周径差そのもの＝指先の重なり量ではない。</div>
+<div class="scale-wrap">
+  <div class="shape-box">
+    <svg id="shapeSvg" width="170" height="300" viewBox="0 0 170 300"></svg>
+    <div class="shape-cap" id="shapeCap">—</div>
+  </div>
+  <div class="gauge">
+    <div class="gauge-track" id="gaugeTrack">
+      <div class="gauge-mark" style="left:6.7%"><span>8.0cm 余裕</span></div>
+      <div class="gauge-mark" style="left:73.3%"><span>13.0cm ギリギリ接触</span></div>
+      <div class="gauge-dot" id="gaugeDot"></div>
+    </div>
+    <div class="gauge-labels"><span>10cm</span><span>竿部最大周径</span><span>14cm</span></div>
+    <div class="verdict" id="scaleVerdict">—</div>
+  </div>
+</div>
+</div>
+
+<div class="panel">
+<h2>ALL 6 — 体格差ランキング</h2>
+<div class="desc">行をタップすると上の表示がその人に切り替わる。Physical Difference は本人の感応度（v4 Trigger章）で、大きさそのものとは別軸。</div>
+<table>
+<thead><tr><th>相手</th><th>身長差</th><th>体重差</th><th>手長差</th><th>握力(約)</th><th>勃起時 長さ/最大周径</th><th>Physical Difference</th></tr></thead>
+<tbody id="rankBody"></tbody>
+</table>
+</div>
+
+<div class="foot">出典：Physical Relationship Profile v4 Master（2026-09-21）§1 身体寸法 / §2・2-A 性器寸法・Hand Scale / §8 Physical Difference Responsiveness。<br>このページは資料の可視化で、シーンの反応を自動決定するものではない（彩音側は AYANE_CONTROL=USER）。</div>
+</div>
+
+<script>
+const AYANE={height:145,weight:42.5,shoulder:35.5,chest:83,waist:61.5,hip:87.5,upperArm:24,forearm:21.5,thigh:51.5,handL:16,handW:8.25,middle:7.0,foot:22.25,grip:19.5};
+const MEN=[
+{id:"naoto",name:"桐谷直人",short:"直人",core:"安定制御 / Gap・Exclusivity",height:178,weight:65,shoulder:43.5,chest:92.5,waist:77.5,hip:93.5,upperArm:30,forearm:27,thigh:54.5,handL:19.25,handW:9.3,middle:8.4,foot:27,grip:42,erectL:14.8,erectC:11.8,base:11.8,mid:11.6,sub:11.2,glans:12.0,diffResp:5.5,scaleText:"6人内では指が回りやすい部類。ただし8cm基準のような大きな余裕があるわけではない。",shapeText:"根元から緩やかに細くなり、亀頭部で再び広がる。"},
+{id:"kei",name:"黒川慧",short:"慧",core:"高強度持続 / Physical Difference・Return — 体格差がコアそのもの",height:181,weight:80,shoulder:48,chest:105,waist:82,hip:102,upperArm:37.5,forearm:32,thigh:62,handL:20.25,handW:10.1,middle:8.9,foot:28,grip:52.5,erectL:15.8,erectC:12.9,base:12.9,mid:12.8,sub:12.3,glans:13.2,diffResp:10,scaleText:"13cm実測基準にほぼ到達。指を密着させて深く巻き込み、指先へ少し力を入れた状態で親指と中指がギリギリ接触する領域。竿全体で太さが落ちにくい。",shapeText:"根元〜亀頭直下まで太さが落ちず、くびれも比較的太い。6人で一番「真っ直ぐ太い」形。"},
+{id:"shoma",name:"朝倉翔馬",short:"翔馬",core:"急加速ピーク / Reaction・Escalation",height:174,weight:64,shoulder:44.5,chest:95.5,waist:75.5,hip:95.5,upperArm:32,forearm:29,thigh:56.5,handL:18.75,handW:9.2,middle:8.2,foot:26.5,grip:49.5,erectL:15.3,erectC:12.3,base:12.0,mid:12.3,sub:11.9,glans:12.6,diffResp:7.5,scaleText:"手を大きく開く領域。中央付近に最大厚があり、位置による太さの変化が比較的分かりやすい。",shapeText:"中央が一番太い。握る位置で太さの違いが一番出る形。"},
+{id:"minato",name:"三浦湊",short:"湊",core:"反応追従 / Micro-expression・Private Data",height:177,weight:62,shoulder:42.5,chest:90.5,waist:74.5,hip:92.5,upperArm:29,forearm:27,thigh:53.5,handL:19.25,handW:9.1,middle:8.4,foot:27,grip:45.5,erectL:14.7,erectC:11.7,base:11.7,mid:11.5,sub:11.1,glans:11.9,diffResp:6.5,scaleText:"6人内では指が回りやすい部類。比較的すっきりしたテーパー。手は6人では細長い方。",shapeText:"根元から先へすっきり細くなる。6人で一番テーパーが素直。"},
+{id:"haruki",name:"宮田晴輝",short:"晴輝",core:"状態依存 / Unguarded・Domestic Intimacy",height:173,weight:63,shoulder:44.5,chest:94.5,waist:76.5,hip:95.5,upperArm:32,forearm:29,thigh:56.5,handL:18.75,handW:9.3,middle:8.2,foot:26,grip:47.5,erectL:14.3,erectC:12.4,base:12.2,mid:12.4,sub:12.0,glans:12.7,diffResp:7,scaleText:"長さは6人で最短側だが太さは上位。手を大きく開く領域で、長さより厚みが先に来るタイプ。",shapeText:"長さに対して中央部の厚みが目立つ。短く太い側。"},
+{id:"hyunwoo",name:"チェ・ヒョヌ",short:"ヒョヌ",core:"制御された長時間 / Mutuality・Entrustment",height:180,weight:75,shoulder:46,chest:99.5,waist:77.5,hip:98,upperArm:33.5,forearm:30,thigh:58,handL:19.75,handW:9.8,middle:8.7,foot:27.25,grip:55,erectL:16.2,erectC:12.7,base:12.7,mid:12.6,sub:12.2,glans:13.1,diffResp:9,scaleText:"13cm実測基準にほぼ到達する領域で、6人最長。根元〜中央まで太さを保ちつつ、慧よりわずかにテーパーが分かる。",shapeText:"最長の上に根元から太さが落ちない。長さ×太さの両方で圧が来る形。"}
+];
+let current="kei";
+const $=id=>document.getElementById(id);
+function fmt(n,d=1){return n.toFixed(d)}
+function signed(n,suffix){return (n>0?"+":"")+fmt(n,Math.abs(n)<10&&n%1!==0?1:0)+suffix}
+function setFig(el,h,shoulder){
+  const scale=1.82; const H=h*scale; const headD=h*scale*0.115;
+  const torsoH=H*0.52, legsH=70;
+  const head=el.querySelector(".head"), torso=el.querySelector(".torso");
+  head.style.width=headD+"px"; head.style.height=headD+"px";
+  torso.style.width=(shoulder*2.05)+"px"; torso.style.height=torsoH+"px";
+  el.querySelector(".legs").style.height=legsH+"px";
+}
+function bars(el,rows){
+  el.innerHTML=rows.map(r=>{
+    const max=r.max; const aw=Math.min(100,r.a/max*100), mw=Math.min(100,r.m/max*100);
+    return `<div class="bar-row"><div class="name">${r.name}</div><div class="track"><div class="fill-m" style="width:${mw}%"></div><div class="fill-a" style="width:${aw}%"></div></div><div class="val">彩音 ${r.av} / 相手 ${r.mv}<br>${r.diff}</div></div>`;
+  }).join("");
+}
+function render(){
+  const m=MEN.find(x=>x.id===current);
+  document.querySelectorAll(".person-chip").forEach(c=>c.classList.toggle("active",c.dataset.id===current));
+  document.querySelectorAll("#rankBody tr").forEach(tr=>tr.classList.toggle("active",tr.dataset.id===current));
+  $("pairTitle").textContent=`佐倉彩音 × ${m.name}`;
+  $("pairCore").textContent=m.core;
+  const hd=m.height-AYANE.height, wd=m.weight-AYANE.weight;
+  $("bigDiff").innerHTML=[
+    [signed(hd,"cm"),"身長差<br>145 → "+m.height+"cm"],
+    [signed(wd,"kg"),"体重差<br>42.5 → 約"+m.weight+"kg"],
+    ["約"+fmt((m.grip/AYANE.grip),1)+"倍","握力<br>約"+AYANE.grip+" → 約"+m.grip+"kg"],
+    [fmt(m.diffResp,1)+" / 10","Physical Difference<br>本人の感応度"]
+  ].map(x=>`<div class="stat"><div class="v">${x[0]}</div><div class="k">${x[1]}</div></div>`).join("");
+  setFig($("figA"),AYANE.height,AYANE.shoulder);
+  setFig($("figM"),m.height,m.shoulder);
+  $("manLabel").innerHTML=`<b>${m.name}</b><br><span>${m.height}cm / 約${m.weight}kg<br>肩幅 約${fmt(m.shoulder)}cm</span>`;
+  const ratio=AYANE.height/m.height;
+  const zone=ratio>0.835?"肩の下〜胸の上あたり":ratio>0.815?"胸の上あたり":"胸あたり";
+  $("reachText").innerHTML=`彩音の頭頂は、相手の <b>${zone}</b>（身長比 ${fmt(ratio*100,0)}%）。<br>肩幅差は <b>${signed(m.shoulder-AYANE.shoulder,"cm")}</b>。正面から抱えられると、彩音の肩幅は相手の胸幅の中にほぼ収まる。`;
+  bars($("bodyBars"),[
+    {name:"肩幅",a:AYANE.shoulder,m:m.shoulder,max:55,av:fmt(AYANE.shoulder)+"cm",mv:"約"+fmt(m.shoulder)+"cm",diff:signed(m.shoulder-AYANE.shoulder,"cm")},
+    {name:"胸囲",a:AYANE.chest,m:m.chest,max:115,av:fmt(AYANE.chest,0)+"cm",mv:"約"+fmt(m.chest,0)+"cm",diff:signed(m.chest-AYANE.chest,"cm")},
+    {name:"上腕囲",a:AYANE.upperArm,m:m.upperArm,max:42,av:fmt(AYANE.upperArm,0)+"cm",mv:"約"+fmt(m.upperArm)+"cm",diff:"相手の上腕 ≒ 彩音の"+(m.upperArm>=34?"太腿の7割":"上腕+1回り")},
+    {name:"前腕囲",a:AYANE.forearm,m:m.forearm,max:36,av:fmt(AYANE.forearm)+"cm",mv:"約"+fmt(m.forearm,0)+"cm",diff:m.forearm>AYANE.upperArm?"相手の前腕が彩音の上腕より太い":""},
+    {name:"大腿囲",a:AYANE.thigh,m:m.thigh,max:66,av:fmt(AYANE.thigh)+"cm",mv:"約"+fmt(m.thigh,0)+"cm",diff:signed(m.thigh-AYANE.thigh,"cm")},
+    {name:"足サイズ",a:AYANE.foot,m:m.foot,max:30,av:fmt(AYANE.foot)+"cm",mv:"約"+fmt(m.foot)+"cm",diff:signed(m.foot-AYANE.foot,"cm")}
+  ]);
+  bars($("handBars"),[
+    {name:"手長",a:AYANE.handL,m:m.handL,max:22,av:"約16cm",mv:"約"+fmt(m.handL)+"cm",diff:signed(m.handL-AYANE.handL,"cm")},
+    {name:"手幅",a:AYANE.handW,m:m.handW,max:11,av:"約8.3cm",mv:"約"+fmt(m.handW)+"cm",diff:signed(m.handW-AYANE.handW,"cm")},
+    {name:"中指長",a:AYANE.middle,m:m.middle,max:9.5,av:"7.0cm",mv:fmt(m.middle)+"cm",diff:signed(m.middle-AYANE.middle,"cm")+"（指1本分近い差）"}
+  ]);
+  const palmA=AYANE.handL*AYANE.handW, palmM=m.handL*m.handW;
+  $("handVerdict").innerHTML=`手の面積（手長×手幅の単純積）は彩音の約 <b>${fmt(palmM/palmA,2)}倍</b>。片手で彩音の後頭部・両手首まわりを収めにいけるかどうかは、この差がそのまま効く。<br>握力は約 <b>${fmt(m.grip,0)}kg</b>（彩音 約${fmt(AYANE.grip)}kg）。彩音発の拘束ごっこでも、力の絶対値では最初から相手側に分がある。`;
+  // shape svg: widths proportional to diameter = circ/pi, scale x11
+  const w=c=>c/Math.PI*11;
+  const pts=[[30,m.base],[105,m.mid],[175,m.sub],[225,m.glans]];
+  const cx=85;
+  let path=`M ${cx-w(m.glans)/2} 18 `;
+  pts.slice().reverse().forEach(p=>{});
+  // build silhouette: top=glans, then sub, mid, base bottom
+  const seq=[[18,m.glans],[78,m.sub],[150,m.mid],[232,m.base]];
+  let d=`M ${cx-w(seq[0][1])/2} ${seq[0][0]}`;
+  seq.forEach(s=>{d+=` L ${cx-w(s[1])/2} ${s[0]}`});
+  d+=` L ${cx-w(seq[seq.length-1][1])/2} 262 Q ${cx} 282 ${cx+w(seq[seq.length-1][1])/2} 262`;
+  seq.slice().reverse().forEach(s=>{d+=` L ${cx+w(s[1])/2} ${s[0]}`});
+  d+=` Q ${cx} 2 ${cx-w(seq[0][1])/2} ${seq[0][0]} Z`;
+  $("shapeSvg").innerHTML=`<path d="${d}" fill="#eee8df" opacity="0.92"/><text x="85" y="295" fill="#888" font-size="10" text-anchor="middle">根元 ${fmt(m.base)} / 中央 ${fmt(m.mid)} / 直下 ${fmt(m.sub)} / 亀頭 ${fmt(m.glans)} cm</text>`;
+  $("shapeCap").innerHTML=`勃起時 長さ <b style="color:#eee">${fmt(m.erectL)}cm</b> ／ 竿部最大周径 <b style="color:#eee">${fmt(m.erectC)}cm</b><br>${m.shapeText}`;
+  const pct=(m.erectC-10)/(14-10)*100;
+  $("gaugeDot").style.left=pct+"%";
+  $("scaleVerdict").innerHTML=`<b>${m.short}：最大周径 ${fmt(m.erectC)}cm</b> — 13cm基準まであと <b>${fmt(13-m.erectC)}cm</b>。<br>${m.scaleText}`;
+}
+$("chips").innerHTML=MEN.map(m=>`<button class="person-chip" data-id="${m.id}">${m.short}</button>`).join("");
+document.querySelectorAll(".person-chip").forEach(c=>c.addEventListener("click",()=>{current=c.dataset.id;render()}));
+$("rankBody").innerHTML=MEN.slice().sort((a,b)=>b.diffResp-a.diffResp).map(m=>`<tr class="row" data-id="${m.id}"><td>${m.name}</td><td>+${m.height-AYANE.height}cm</td><td>+${fmt(m.weight-AYANE.weight,0)}kg</td><td>+${fmt(m.handL-AYANE.handL)}cm</td><td>約${fmt(m.grip,0)}kg</td><td>${fmt(m.erectL)} / ${fmt(m.erectC)}cm</td><td>${fmt(m.diffResp,1)}</td></tr>`).join("");
+document.querySelectorAll("#rankBody tr").forEach(tr=>tr.addEventListener("click",()=>{current=tr.dataset.id;render();window.scrollTo({top:0,behavior:"smooth"})}));
+render();
+</script>
+</body>
+</html>

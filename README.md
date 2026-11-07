@@ -6,6 +6,7 @@
 
 - `play.html` — Dyad Interaction Simulator v4（二人の関係性をシミュレーションするツール）
 - `rhythm.html` — Physical Rhythm Profile v6（Canvas波形の描画・録画ツール）
+- `scale.html` — Physical Difference Profile v0.1（体格差コンパレータ：身長・肩幅・手・握力・Hand Scaleを彩音と6人で比較）
 
 どちらも単一HTMLファイルで完結しており、外部ファイルへの依存はありません。
 
