@@ -59,7 +59,7 @@ tr.row.active td{background:#242019;color:#eee8df;font-weight:700}
 <body>
 <div class="app">
 <h1>PHYSICAL DIFFERENCE PROFILE</h1>
-<div class="subtitle">Height × Shoulder × Hand × Grip × Hand Scale — 体格差コンパレータ試作 v0.2</div>
+<div class="subtitle">Height × Shoulder × Hand × Grip × Hand Scale — 体格差コンパレータ試作 v0.3</div>
 <div class="note-top">数値は Physical Relationship Profile v4（正本）の中央値で表示。範囲のある項目は「約」。</div>
 
 <div class="panel person-panel" id="chips"></div>
@@ -69,6 +69,7 @@ tr.row.active td{background:#242019;color:#eee8df;font-weight:700}
 <div class="desc" id="pairCore">—</div>
 <div class="big-diff" id="bigDiff"></div>
 <div class="sil-wrap"><svg id="silSvg" viewBox="0 0 560 424" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div class="reach" style="color:#666;font-size:10px">シルエットは男女各1種の固定型ベース（約7頭身）を身長で伸縮し、肩・胸・腰・尻・太腿の幅だけを実測値で局所調整したもの。頭・首・手・足は動かさない。一般的な身長比較ツールと同じ方式。</div>
 <div class="reach" id="reachText">—</div>
 </div>
 
@@ -144,43 +145,72 @@ function smoothPath(pts){
   return d;
 }
 function figureSVG(cx,baseline,p,female,color){
+  /* v0.3: fixed base silhouette per gender (hand-tuned landmarks, ~7 heads),
+     height scales the whole figure; measurement data moves ONLY the
+     shoulder/chest/waist/hip/thigh outline points locally, clamped.
+     Head, neck, hands and feet never move. Landmark heights use
+     Drillis & Contini fractions from the floor. */
   const s=1.92, h=p.height;
   const top=baseline-h*s;
   const X=off=>+(cx+off*s).toFixed(1), Y=d=>+(top+d*s).toFixed(1);
-  const headH=h/7.6, headW=female?14.5:15.5, neckW=female?8.6:11;
-  const chestW=p.chest/2.95, waistW=p.waist/2.85, hipW=p.hip/2.85;
-  const thighW=p.thigh/3.05, legC=hipW/4+0.6;
-  const kneeW=thighW*0.60, calfW=thighW*0.74, ankleW=thighW*0.36;
-  const armW=p.upperArm/3.05;
-  const bodyH=h-headH;
-  const dNeck=headH*0.98, dSh=headH*1.10, dChest=headH+bodyH*0.20, dWaist=headH+bodyH*0.335, dHip=headH+bodyH*0.435, dCrotch=headH+bodyH*0.52;
-  // right contour: neck -> shoulder -> chest -> waist -> hip -> leg -> foot -> inner leg -> crotch
+  const D=f=>h*(1-f); // distance from top for a floor-fraction landmark
+  const clampF=(v,base)=>base*Math.max(0.88,Math.min(1.22,v/base));
+  const base=female?{sh:17.8,ch:13.2,wa:9.8,hi:13.9,th:8.2}:{sh:22.5,ch:15.7,wa:13.5,hi:16.0,th:9.3};
+  const shH=clampF(p.shoulder/2,base.sh);
+  const chH=clampF(p.chest/Math.PI/2,base.ch);
+  const waH=clampF(p.waist/Math.PI/2,base.wa);
+  const hiH=clampF(p.hip/Math.PI/2,base.hi);
+  const thH=clampF(p.thigh/Math.PI/2,base.th);
+  const headH=female?21:23, headHalf=(female?14.2:15.2)/2, neckHalf=(female?8.5:11)/2;
+  const legC=hiH*0.52, kneeH=thH*0.58, calfH=thH*0.68, ankH=3.0;
+  const dSh=D(0.818), dChin=D(0.870), dChest=D(0.720), dWaist=D(0.600), dHip=D(0.545), dCrotch=D(0.530);
+  const dKnee=D(0.285), dCalf=D(0.210), dAnk=D(0.055);
+  // torso+legs: one continuous outline, right side down, crotch notch, left side up
   const R=[
-    [neckW/2,dNeck],[p.shoulder/2-1.2,dSh],[chestW/2,dChest],[waistW/2,dWaist],[hipW/2,dHip],
-    [legC+thighW/2,headH+bodyH*0.56],[legC+kneeW/2,headH+bodyH*0.735],[legC+calfW/2,headH+bodyH*0.83],
-    [legC+ankleW/2,h-8],[legC+4.6,h-2.2],[legC+4.4,h-0.1],[legC-4.0,h-0.1],[legC-3.4,h-2.4],
-    [legC-ankleW/2,h-8],[legC-thighW/2+1.6,headH+bodyH*0.60],[1.0,dCrotch]
+    [neckHalf,headH*0.92],[shH-1.0,dSh],[chH+0.6,dChest]
   ];
+  if(female){ R.push([chH*0.90,dChest+5.5]); }
+  R.push(
+    [waH,dWaist],[hiH,dHip],
+    [legC+thH,(dHip+dCrotch)/2+3],[legC+thH*0.92,D(0.400)],
+    [legC+kneeH,dKnee],[legC+calfH,dCalf],[legC+ankH,dAnk],
+    [legC+3.3,h-0.2],[legC-3.3,h-0.2],[legC-ankH,dAnk],
+    [legC-calfH*0.92,dCalf+2],[legC-kneeH*0.94,dKnee],
+    [legC-thH*0.80,D(0.400)],[1.2,dCrotch]
+  );
   const ptsR=R.map(q=>[X(q[0]),Y(q[1])]);
   const ptsL=R.slice(0,-1).reverse().map(q=>[X(-q[0]),Y(q[1])]);
   const torso=smoothPath(ptsR.concat(ptsL))+" Z";
-  // arms: thick rounded strokes behind torso, shoulder -> fingertip beside hip/thigh
-  const armY1=Y(dSh+1.5), armY2=Y(headH+bodyH*0.60);
-  const armRx=X(p.shoulder/2+armW*0.28), armLx=X(-(p.shoulder/2+armW*0.28));
-  const handRx=X(hipW/2+armW*0.42), handLx=X(-(hipW/2+armW*0.42));
-  const armWpx=(armW*s).toFixed(1);
+  // arms: tapered closed shapes behind the torso
+  const upHalf=p.upperArm/Math.PI/2, foHalf=p.forearm/Math.PI/2;
+  const dElb=D(0.630), dWr=D(0.450), dHand=D(0.395);
+  const cSh=shH-0.6, cElb=shH+0.9, cWr=hiH+2.7, cHand=hiH+3.0;
+  function arm(side){
+    const sg=side; // +1 right, -1 left
+    const pts=[
+      [sg*(cSh+upHalf*0.7),dSh+0.5],[sg*(cElb+upHalf*0.85),dElb],[sg*(cWr+foHalf),dWr],
+      [sg*(cHand+1.6),dHand-2],[sg*cHand,dHand+1.8],[sg*(cHand-2.6),dHand-2.5],
+      [sg*(cWr-foHalf-0.6),dWr-1],[sg*(cElb-upHalf*0.55),dElb+1.5],[sg*(chH+0.4),dSh+7.5]
+    ].map(q=>[X(q[0]),Y(q[1])]);
+    return `<path d="${smoothPath(pts)} Z" fill="${color}"/>`;
+  }
+  // negative-space slit between arm and torso (panel background colour)
+  function slit(side){
+    const sg=side;
+    const x1=X(sg*(cElb-upHalf*0.55-1.1)), x2=X(sg*(cWr-foHalf-1.7));
+    return `<path d="M ${X(sg*(chH-0.6))} ${Y(dSh+8)} L ${x1} ${Y(dElb+1)} L ${x2} ${Y(dWr-2)}" stroke="#101010" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
+  }
   let out="";
   if(female){
-    // hair: mass behind head/shoulders down to chest
-    const hx=X(0), hTop=Y(-0.6), hBot=Y(headH+7.5), hr=(headW/2+2.6)*s;
-    out+=`<path d="M ${hx-hr} ${hBot} C ${hx-hr-2} ${Y(headH*0.4)}, ${hx-hr*0.7} ${hTop}, ${hx} ${hTop} C ${hx+hr*0.7} ${hTop}, ${hx+hr+2} ${Y(headH*0.4)}, ${hx+hr} ${hBot} C ${hx+hr*0.45} ${hBot+7}, ${hx-hr*0.45} ${hBot+7}, ${hx-hr} ${hBot} Z" fill="#4a4038"/>`;
+    const hx=X(0), hTop=Y(-0.6), hBot=Y(headH+11), hr=(headHalf+2.4)*s;
+    out+=`<path d="M ${hx-hr} ${hBot} C ${hx-hr-2} ${Y(headH*0.4)}, ${hx-hr*0.7} ${hTop}, ${hx} ${hTop} C ${hx+hr*0.7} ${hTop}, ${hx+hr+2} ${Y(headH*0.4)}, ${hx+hr} ${hBot} C ${hx+hr*0.45} ${hBot+6}, ${hx-hr*0.45} ${hBot+6}, ${hx-hr} ${hBot} Z" fill="#4a4038"/>`;
   }
-  out+=`<path d="M ${armRx} ${armY1} L ${handRx} ${armY2}" stroke="${color}" stroke-width="${armWpx}" stroke-linecap="round" fill="none"/>`;
-  out+=`<path d="M ${armLx} ${armY1} L ${handLx} ${armY2}" stroke="${color}" stroke-width="${armWpx}" stroke-linecap="round" fill="none"/>`;
-  out+=`<rect x="${X(-neckW/2)}" y="${Y(headH*0.72)}" width="${(neckW*s).toFixed(1)}" height="${(headH*0.42*s).toFixed(1)}" fill="${color}"/>`;
+  out+=arm(1)+arm(-1);
+  out+=`<rect x="${X(-neckHalf)}" y="${Y(headH*0.70)}" width="${(neckHalf*2*s).toFixed(1)}" height="${(headH*0.45*s).toFixed(1)}" fill="${color}"/>`;
   out+=`<path d="${torso}" fill="${color}"/>`;
-  out+=`<ellipse cx="${X(0)}" cy="${Y(headH*0.46)}" rx="${(headW/2*s).toFixed(1)}" ry="${(headH*0.52*s).toFixed(1)}" fill="${color}"/>`;
-  if(female){ out+=`<path d="M ${X(-headW/2-0.6)} ${Y(headH*0.30)} C ${X(-headW/2-1.2)} ${Y(-0.8)}, ${X(headW/2+1.2)} ${Y(-0.8)}, ${X(headW/2+0.6)} ${Y(headH*0.30)} C ${X(headW*0.2)} ${Y(headH*0.02)}, ${X(-headW*0.2)} ${Y(headH*0.02)}, ${X(-headW/2-0.6)} ${Y(headH*0.30)} Z" fill="#4a4038"/>`; }
+  out+=slit(1)+slit(-1);
+  out+=`<ellipse cx="${X(0)}" cy="${Y(headH*0.46)}" rx="${(headHalf*s).toFixed(1)}" ry="${(headH*0.52*s).toFixed(1)}" fill="${color}"/>`;
+  if(female){ out+=`<path d="M ${X(-headHalf-0.6)} ${Y(headH*0.30)} C ${X(-headHalf-1.2)} ${Y(-0.8)}, ${X(headHalf+1.2)} ${Y(-0.8)}, ${X(headHalf+0.6)} ${Y(headH*0.30)} C ${X(headHalf*0.4)} ${Y(headH*0.02)}, ${X(-headHalf*0.4)} ${Y(headH*0.02)}, ${X(-headHalf-0.6)} ${Y(headH*0.30)} Z" fill="#4a4038"/>`; }
   return out;
 }
 function renderSilhouette(m){
@@ -193,6 +223,12 @@ function renderSilhouette(m){
   // Ayane head-top guide line across to the man's body
   svg+=`<line x1="155" y1="${aTop.toFixed(1)}" x2="405" y2="${aTop.toFixed(1)}" stroke="#eee8df" stroke-width="1" stroke-dasharray="5 5" opacity="0.55"/>`;
   svg+=`<circle cx="405" cy="${aTop.toFixed(1)}" r="3.5" fill="#eee8df"/>`;
+  // man's shoulder / chin guide lines (Drillis & Contini: shoulder 0.818H, chin 0.870H)
+  const shY=baseline-0.818*m.height*1.92, chinY=baseline-0.870*m.height*1.92;
+  svg+=`<line x1="330" y1="${shY.toFixed(1)}" x2="478" y2="${shY.toFixed(1)}" stroke="#9a8f80" stroke-width="1" stroke-dasharray="4 4" opacity="0.8"/>`;
+  svg+=`<text x="482" y="${(shY+3).toFixed(1)}" fill="#9a8f80" font-size="10">肩 約${Math.round(0.818*m.height)}cm</text>`;
+  svg+=`<line x1="330" y1="${chinY.toFixed(1)}" x2="478" y2="${chinY.toFixed(1)}" stroke="#9a8f80" stroke-width="1" stroke-dasharray="4 4" opacity="0.8"/>`;
+  svg+=`<text x="482" y="${(chinY+3).toFixed(1)}" fill="#9a8f80" font-size="10">あご 約${Math.round(0.870*m.height)}cm</text>`;
   svg+=`<text x="155" y="396" fill="#eee" font-size="13" font-weight="700" text-anchor="middle">佐倉彩音</text>`;
   svg+=`<text x="155" y="414" fill="#999" font-size="11" text-anchor="middle">145cm / 約42.5kg / 肩幅 約35.5cm</text>`;
   svg+=`<text x="405" y="396" fill="#eee" font-size="13" font-weight="700" text-anchor="middle">${m.name}</text>`;
@@ -219,9 +255,12 @@ function render(){
     [fmt(m.diffResp,1)+" / 10","Physical Difference<br>本人の感応度"]
   ].map(x=>`<div class="stat"><div class="v">${x[0]}</div><div class="k">${x[1]}</div></div>`).join("");
   renderSilhouette(m);
-  const ratio=AYANE.height/m.height;
-  const zone=ratio>0.835?"肩の下〜胸の上あたり":ratio>0.815?"胸の上あたり":"胸あたり";
-  $("reachText").innerHTML=`彩音の頭頂は、相手の <b>${zone}</b>（身長比 ${fmt(ratio*100,0)}%）。<br>肩幅差は <b>${signed(m.shoulder-AYANE.shoulder,"cm")}</b>。正面から抱えられると、彩音の肩幅は相手の胸幅の中にほぼ収まる。`;
+  const shC=0.818*m.height, chinC=0.870*m.height, crown=AYANE.height;
+  let pos;
+  if(crown>=shC+1){ pos=`肩ライン（約${Math.round(shC)}cm）の約${Math.round(crown-shC)}cm上、あご（約${Math.round(chinC)}cm）には届かない位置`; }
+  else if(crown<=shC-1){ pos=`肩ライン（約${Math.round(shC)}cm）の約${Math.round(shC-crown)}cm下、あご（約${Math.round(chinC)}cm）には届かない位置`; }
+  else { pos=`肩ライン（約${Math.round(shC)}cm）とほぼ同じ高さ、あご（約${Math.round(chinC)}cm）には届かない位置`; }
+  $("reachText").innerHTML=`彩音の頭頂（145cm）は、相手の <b>${pos}</b>。<br>肩幅差は <b>${signed(m.shoulder-AYANE.shoulder,"cm")}</b>。正面から抱えられると、彩音の肩幅は相手の胸幅の中にほぼ収まる。`;
   bars($("bodyBars"),[
     {name:"肩幅",a:AYANE.shoulder,m:m.shoulder,max:55,av:fmt(AYANE.shoulder)+"cm",mv:"約"+fmt(m.shoulder)+"cm",diff:signed(m.shoulder-AYANE.shoulder,"cm")},
     {name:"胸囲",a:AYANE.chest,m:m.chest,max:115,av:fmt(AYANE.chest,0)+"cm",mv:"約"+fmt(m.chest,0)+"cm",diff:signed(m.chest-AYANE.chest,"cm")},
