@@ -148,8 +148,8 @@ function audioTick(now){
   const a=S.arousal/100,t=AC.currentTime;
   lfo.frequency.setTargetAtTime(0.24+a*0.85,t,0.2);
   const held=now<breathHoldUntil;
-  breathGain.gain.setTargetAtTime(held?0:0.015+a*0.05,t,0.1);
-  lfoGain.gain.setTargetAtTime(held?0:0.02+a*0.10,t,0.15);
+  breathGain.gain.setTargetAtTime(held?0:0.009+a*0.030,t,0.1);
+  lfoGain.gain.setTargetAtTime(held?0:0.012+a*0.06,t,0.15);
   breathFilter.frequency.setTargetAtTime(600+a*500,t,0.3);
   const sg=(S.down&&S.phase==="play")?Math.min(0.05,(S.speed/900)*0.05):0;
   strokeGain.gain.setTargetAtTime(sg,t,0.06);
@@ -160,7 +160,7 @@ function gasp(big){
   const src=AC.createBufferSource();src.buffer=noiseBuf;
   const f=AC.createBiquadFilter();f.type="bandpass";f.frequency.value=big?1100:900;f.Q.value=0.8;
   const g=AC.createGain();g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(big?0.22:0.12,t+0.07);
+  g.gain.exponentialRampToValueAtTime(big?0.13:0.075,t+0.07);
   g.gain.exponentialRampToValueAtTime(0.001,t+(big?0.55:0.34));
   src.connect(f);f.connect(g);g.connect(master);
   src.start(t,Math.random()*1.0,big?0.7:0.45);
