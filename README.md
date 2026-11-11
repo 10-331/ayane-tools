@@ -8,6 +8,7 @@
 
 - `play.html` — Dyad Interaction Simulator v4（二人の関係性をシミュレーションするツール）
 - `rhythm.html` — Physical Rhythm Profile v7（Canvas波形の描画・録画ツール、コンディション切替（ゴムあり／生）対応）
+- `finish.html` — Finish Profile v1（フィニッシュの物性＝量・勢い・脈動・粘性・濃さを竿の模式図アニメーションで可視化するツール）
 - `scale.html` — Physical Difference Profile v0.3（体格差コンパレータ：身長・肩幅・手・握力・Hand Scaleを彩音と6人で比較）
 - `phone.html` — Phone Peek v0.1（黒川慧のスマホを覗く試作：ロック画面／LINE風チャット／メモ／検索履歴／裏側ステータス。場面＝会った日の夜）
 - `index.html` — 総合ページ（全ツールへのリンク集）

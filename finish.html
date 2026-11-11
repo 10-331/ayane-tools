@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Finish Profile v1</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:#050505;
+  color:#eee;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  padding:22px 12px 50px;
+}
+
+.app{
+  width:min(1080px,100%);
+  margin:auto;
+}
+
+h1{
+  margin:0;
+  text-align:center;
+  font-size:16px;
+  letter-spacing:.10em;
+}
+
+.subtitle{
+  margin:7px 0 20px;
+  text-align:center;
+  color:#999;
+  font-size:11px;
+  line-height:1.6;
+}
+
+.panel{
+  background:#101010;
+  border:1px solid #2a2a2a;
+  border-radius:20px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+/* ===========================
+   PERSON / CONDITION CHIPS
+=========================== */
+
+.person-panel,
+.condition-panel{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:9px;
+}
+
+.person-chip,
+.condition-chip{
+  border:1px solid #444;
+  background:#242424;
+  color:#eee;
+  padding:8px 14px;
+  border-radius:18px;
+  font-size:12px;
+  cursor:pointer;
+  user-select:none;
+  transition:
+    background .15s ease,
+    color .15s ease,
+    border-color .15s ease;
+}
+
+.person-chip.active,
+.condition-chip.active{
+  background:#eee8df;
+  color:#111;
+  border-color:#eee8df;
+}
+
+.condition-label{
+  font-size:12px;
+  color:#999;
+}
+
+
+/* ===========================
+   CANVAS
+=========================== */
+
+.canvas-wrap{
+  width:100%;
+  background:#000;
+  border:1px solid #222;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+canvas{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+
+/* ===========================
+   CONTROLS
+=========================== */
+
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:11px;
+}
+
+button{
+  border:none;
+  border-radius:18px;
+  padding:8px 16px;
+  font-weight:700;
+  cursor:pointer;
+  background:#eee8df;
+  color:#111;
+}
+
+button.secondary{
+  background:#242424;
+  color:#eee;
+  border:1px solid #444;
+}
+
+button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+label{
+  font-size:12px;
+  color:#ddd;
+}
+
+input[type=number]{
+  width:72px;
+  padding:6px 8px;
+  border-radius:9px;
+  border:1px solid #444;
+  background:#181818;
+  color:white;
+}
+
+input[type=range]{
+  accent-color:#eee8df;
+  width:130px;
+  vertical-align:middle;
+}
+
+.status{
+  margin-top:10px;
+  min-height:18px;
+  color:#aaa;
+  font-size:11px;
+  text-align:center;
+}
+
+.legend{
+  color:#888;
+  font-size:10px;
+  line-height:1.7;
+  text-align:center;
+  margin-top:14px;
+}
+
+
+/* ===========================
+   PARAMETER BARS
+=========================== */
+
+.panel-title{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  color:#ddd;
+  margin-bottom:10px;
+  text-align:center;
+}
+
+.param-row{
+  display:grid;
+  grid-template-columns:52px 1fr 86px;
+  align-items:center;
+  gap:10px;
+  margin:8px 0;
+  font-size:12px;
+}
+
+.param-row .plabel{
+  color:#ccc;
+}
+
+.param-row .pvalue{
+  color:#eee8df;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.bar{
+  height:10px;
+  background:#1c1c1c;
+  border:1px solid #333;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.bar > i{
+  display:block;
+  height:100%;
+  background:#eee8df;
+  border-radius:999px;
+}
+
+.param-note{
+  color:#999;
+  font-size:11px;
+  text-align:center;
+  margin-top:10px;
+  line-height:1.7;
+}
+
+.cmp-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:16px;
+}
+
+.cmp h3{
+  margin:0 0 8px;
+  font-size:11px;
+  color:#bbb;
+  letter-spacing:.06em;
+  text-align:center;
+}
+
+.cmp-row{
+  display:grid;
+  grid-template-columns:42px 1fr 30px;
+  align-items:center;
+  gap:7px;
+  margin:5px 0;
+  font-size:10.5px;
+  color:#888;
+}
+
+.cmp-row .bar{
+  height:7px;
+}
+
+.cmp-row .bar > i{
+  background:#7d766a;
+}
+
+.cmp-row.sel{
+  color:#eee;
+  font-weight:700;
+}
+
+.cmp-row.sel .bar > i{
+  background:#eee8df;
+}
+
+.cmp-row .cvalue{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+@media(max-width:600px){
+  body{
+    padding-left:8px;
+    padding-right:8px;
+  }
+
+  .panel{
+    padding:11px;
+  }
+
+  .person-chip,
+  .condition-chip{
+    padding:8px 12px;
+    font-size:13px;
+  }
+
+  .param-row{
+    grid-template-columns:44px 1fr 70px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h1>FINISH PROFILE v1</h1>
+
+<div class="subtitle">
+量 × 勢い × 脈動 × 粘性 × 濃さ<br>
+フィニッシュの物性を、竿の模式図と先端からの放出アニメーションで可視化
+</div>
+
+
+<div class="panel person-panel">
+
+<button class="person-chip active" data-person="naoto">
+直人
+</button>
+
+<button class="person-chip" data-person="kei">
+慧
+</button>
+
+<button class="person-chip" data-person="shoma">
+翔馬
+</button>
+
+<button class="person-chip" data-person="minato">
+湊
+</button>
+
+<button class="person-chip" data-person="haruki">
+晴輝
+</button>
+
+<button class="person-chip" data-person="hyunwoo">
+ヒョヌ
+</button>
+
+</div>
+
+
+<div class="canvas-wrap">
+<canvas
+  id="canvas"
+  width="1200"
+  height="700">
+</canvas>
+</div>
+
+
+<div class="panel condition-panel">
+
+<span class="condition-label">
+コンディション：
+</span>
+
+<button class="condition-chip active" data-cond="raw">
+生
+</button>
+
+<button class="condition-chip" data-cond="condom">
+ゴムあり
+</button>
+
+</div>
+
+
+<div class="panel controls">
+
+<button id="play">
+Play
+</button>
+
+<button
+  id="reset"
+  class="secondary">
+Reset
+</button>
+
+<label>
+溜め日数
+<input
+  id="storage"
+  type="range"
+  min="0"
+  max="7"
+  step="1"
+  value="0">
+<span id="storageValue">0 日</span>
+</label>
+
+<label>
+Seed
+<input
+  id="seed"
+  type="number"
+  value="48271"
+  style="width:90px">
+</label>
+
+<button
+  id="newSession"
+  class="secondary">
+New Session
+</button>
+
+<div
+  id="status"
+  class="status"
+  style="width:100%">
+Ready
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<div class="panel-title">
+選択中のパラメータ
+</div>
+
+<div id="params"></div>
+
+<div
+  class="param-note"
+  id="paramNote">
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<div class="panel-title">
+6人比較
+</div>
+
+<div
+  id="compare"
+  class="cmp-grid">
+</div>
+
+</div>
+
+
+<div class="legend">
+
+勢い × パルスの強さ が閾値を超えると放物線で飛び、下回ると先端から垂れます。
+粘性が高いほど滴は糸を引き、落ちるのが遅くなります。
+濃さは不透明度、溜め日数は 量 と 濃さ に効きます（感度は人物差あり）。
+晴輝は Seed で 勢い・脈動・粘性 が大きくブレます。
+ゴムありでは、先端の溜まりが満ちていく表現に切り替わります。
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   PROFILE DATA
+   volume / velocity / pulses / viscosity / opacity : 0-10
+   interval : パルス強さと間隔のパターン
+   storage  : 溜め日数への感度
+========================================================= */
+
+const profiles = [
+
+{
+  id:"naoto",
+  name:"直人",
+  volume:5.5,
+  velocity:5.5,
+  pulses:5,
+  interval:"steady",
+  viscosity:6.5,
+  opacity:7.0,
+  storage:1.0
+},
+
+{
+  id:"kei",
+  name:"慧",
+  volume:8.5,
+  velocity:8.5,
+  pulses:7,
+  interval:"slowdecay",
+  viscosity:8.0,
+  opacity:6.5,
+  storage:0.6
+},
+
+{
+  id:"shoma",
+  name:"翔馬",
+  volume:6.0,
+  velocity:9.5,
+  pulses:4,
+  interval:"fastdecay",
+  viscosity:4.0,
+  opacity:6.0,
+  storage:1.5
+},
+
+{
+  id:"minato",
+  name:"湊",
+  volume:6.0,
+  velocity:6.0,
+  pulses:5,
+  interval:"accent",
+  viscosity:5.5,
+  opacity:6.0,
+  storage:1.0
+},
+
+{
+  id:"haruki",
+  name:"晴輝",
+  volume:5.0,
+  velocity:6.0,
+  pulses:5,
+  interval:"irregular",
+  viscosity:5.5,
+  opacity:5.5,
+  storage:1.0
+},
+
+{
+  id:"hyunwoo",
+  name:"ヒョヌ",
+  volume:7.5,
+  velocity:6.5,
+  pulses:6,
+  interval:"steadylong",
+  viscosity:5.5,
+  opacity:6.5,
+  storage:1.0
+}
+
+];
+
+const intervalLabels = {
+  steady:"一定",
+  slowdecay:"減衰が遅い",
+  fastdecay:"急減速",
+  accent:"中間にアクセント",
+  irregular:"不規則",
+  steadylong:"一定で長い"
+};
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let currentId = "naoto";
+let condition = "raw";
+let storageDays = 0;
+let seed = 48271;
+
+
+/* =========================================================
+   PURE HELPERS
+========================================================= */
+
+function clamp(
+  v,
+  lo,
+  hi
+){
+  return Math.min(
+    hi,
+    Math.max(lo, v)
+  );
+}
+
+
+function hashString(
+  str
+){
+
+  let h =
+  2166136261;
+
+  for(
+    let i=0;
+    i<str.length;
+    i++
+  ){
+
+    h ^=
+    str.charCodeAt(i);
+
+    h =
+    Math.imul(
+      h,
+      16777619
+    );
+  }
+
+  return h>>>0;
+}
+
+
+function seededRandom(
+  seedValue,
+  key
+){
+
+  let x =
+  hashString(
+    seedValue+"-"+key
+  );
+
+  x +=
+  0x6D2B79F5;
+
+  x =
+  Math.imul(
+    x^(x>>>15),
+    x|1
+  );
+
+  x ^=
+  x+
+  Math.imul(
+    x^(x>>>7),
+    x|61
+  );
+
+  return (
+    (
+      x^(x>>>14)
+    )>>>0
+  ) / 4294967296;
+}
+
+
+/* パルス k 本目（0始まり）の強さ。n は総パルス数 */
+function pulseStrength(
+  profile,
+  k,
+  n
+){
+
+  switch(profile.interval){
+
+    case "steady":
+      return 1;
+
+    case "steadylong":
+      return 0.95;
+
+    case "slowdecay":
+      return Math.max(
+        0.35,
+        1 - 0.09*k
+      );
+
+    case "fastdecay":
+      return Math.pow(
+        0.55,
+        k
+      );
+
+    case "accent": {
+
+      const mid =
+      (n-1)/2;
+
+      return 0.7 +
+      0.45*Math.exp(
+        -((k-mid)*(k-mid))/1.6
+      );
+    }
+
+    case "irregular":
+      return 0.5 +
+      0.65*seededRandom(
+        seed,
+        profile.id+"-pulse-"+k
+      );
+  }
+
+  return 1;
+}
+
+
+/* パルス k の後に空く間隔（秒） */
+function pulseGap(
+  profile,
+  k
+){
+
+  switch(profile.interval){
+
+    case "steady":
+      return 0.9;
+
+    case "steadylong":
+      return 1.15;
+
+    case "slowdecay":
+      return 0.78 + 0.07*k;
+
+    case "fastdecay":
+      return 0.55;
+
+    case "accent":
+      return 0.85;
+
+    case "irregular":
+      return 0.55 +
+      0.7*seededRandom(
+        seed,
+        profile.id+"-gap-"+k
+      );
+  }
+
+  return 0.9;
+}
+
+
+/* 溜め日数と Seed（晴輝のみ）を反映した実効パラメータ */
+function effectiveProfile(
+  profile
+){
+
+  const eff = {
+    id:profile.id,
+    name:profile.name,
+    interval:profile.interval,
+    volume:profile.volume,
+    velocity:profile.velocity,
+    pulses:profile.pulses,
+    viscosity:profile.viscosity,
+    opacity:profile.opacity
+  };
+
+  eff.volume =
+  clamp(
+    eff.volume +
+    storageDays*0.28*profile.storage,
+    0,
+    10
+  );
+
+  eff.opacity =
+  clamp(
+    eff.opacity +
+    storageDays*0.30*profile.storage,
+    0,
+    10
+  );
+
+  if(profile.id==="haruki"){
+
+    eff.velocity =
+    clamp(
+      eff.velocity +
+      (seededRandom(
+        seed,
+        "haruki-velocity"
+      )-0.5)*4.4,
+      1,
+      10
+    );
+
+    eff.pulses =
+    Math.round(
+      clamp(
+        eff.pulses +
+        (seededRandom(
+          seed,
+          "haruki-pulses"
+        )-0.5)*4,
+        3,
+        8
+      )
+    );
+
+    eff.viscosity =
+    clamp(
+      eff.viscosity +
+      (seededRandom(
+        seed,
+        "haruki-viscosity"
+      )-0.5)*4.0,
+      1,
+      10
+    );
+  }
+
+  return eff;
+}
+
+
+/* 放出スケジュール（パルス＋残滴）を組み立てる */
+function buildSchedule(
+  profile,
+  eff
+){
+
+  const pulses = [];
+  let t = 0.6;
+
+  for(
+    let k=0;
+    k<eff.pulses;
+    k++
+  ){
+
+    pulses.push({
+      start:t,
+      strength:pulseStrength(
+        profile,
+        k,
+        eff.pulses
+      )
+    });
+
+    t +=
+    pulseGap(
+      profile,
+      k
+    );
+  }
+
+  const lastPulseEnd =
+  t + 0.3;
+
+  const drips = [
+    {
+      start:lastPulseEnd + 0.6,
+      scale:1.0
+    },
+    {
+      start:lastPulseEnd + 1.9,
+      scale:0.7
+    },
+    {
+      start:lastPulseEnd + 3.1,
+      scale:0.45
+    }
+  ];
+
+  return {
+    pulses:pulses,
+    drips:drips,
+    end:lastPulseEnd + 4.6
+  };
+}
+
+</script>
+
+<script>
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const canvas =
+document.getElementById("canvas");
+
+const ctx =
+canvas.getContext("2d");
+
+const playButton =
+document.getElementById("play");
+
+const resetButton =
+document.getElementById("reset");
+
+const storageInput =
+document.getElementById("storage");
+
+const storageValue =
+document.getElementById("storageValue");
+
+const seedInput =
+document.getElementById("seed");
+
+const newSessionButton =
+document.getElementById("newSession");
+
+const statusEl =
+document.getElementById("status");
+
+const paramsEl =
+document.getElementById("params");
+
+const paramNoteEl =
+document.getElementById("paramNote");
+
+const compareEl =
+document.getElementById("compare");
+
+const personChips =
+Array.from(
+  document.querySelectorAll(".person-chip")
+);
+
+const conditionChips =
+Array.from(
+  document.querySelectorAll(".condition-chip")
+);
+
+
+/* =========================================================
+   GEOMETRY
+========================================================= */
+
+const CY = 290;          /* 竿の中心の高さ */
+const FLOOR = 600;       /* 地面 */
+const TIP = {
+  x:842,
+  y:CY,
+  dripX:806,
+  bottomY:CY + 42
+};
+
+function currentProfile(){
+  return profiles.find(
+    p => p.id===currentId
+  );
+}
+
+function setStatus(text){
+  statusEl.textContent = text;
+}
+
+
+/* =========================================================
+   PARAMETER BARS
+========================================================= */
+
+const PARAM_DEFS = [
+  { key:"volume",    label:"量" },
+  { key:"velocity",  label:"勢い" },
+  { key:"pulses",    label:"脈動" },
+  { key:"viscosity", label:"粘性" },
+  { key:"opacity",   label:"濃さ" }
+];
+
+function paramDisplay(
+  eff,
+  key
+){
+  if(key==="pulses"){
+    return {
+      text:eff.pulses + " 回",
+      pct:eff.pulses/8*100
+    };
+  }
+  return {
+    text:eff[key].toFixed(1),
+    pct:eff[key]*10
+  };
+}
+
+function renderParams(){
+
+  const base =
+  currentProfile();
+
+  const eff =
+  effectiveProfile(base);
+
+  paramsEl.innerHTML =
+  PARAM_DEFS.map(def => {
+
+    const d =
+    paramDisplay(eff, def.key);
+
+    return (
+      '<div class="param-row">' +
+      '<div class="plabel">' + def.label + '</div>' +
+      '<div class="bar"><i style="width:' +
+        d.pct.toFixed(1) + '%"></i></div>' +
+      '<div class="pvalue">' + d.text + '</div>' +
+      '</div>'
+    );
+  }).join("");
+
+  paramNoteEl.textContent =
+    base.name +
+    " — パルスパターン：" +
+    intervalLabels[base.interval] +
+    " ／ 溜め " + storageDays + " 日" +
+    (base.id==="haruki"
+      ? " ／ Seed " + seed + " で変動中"
+      : "");
+}
+
+function renderCompare(){
+
+  compareEl.innerHTML =
+  PARAM_DEFS.map(def => {
+
+    const rows =
+    profiles.map(p => {
+
+      const eff =
+      effectiveProfile(p);
+
+      const d =
+      paramDisplay(eff, def.key);
+
+      const sel =
+      p.id===currentId ? " sel" : "";
+
+      return (
+        '<div class="cmp-row' + sel + '">' +
+        '<div>' + p.name + '</div>' +
+        '<div class="bar"><i style="width:' +
+          d.pct.toFixed(1) + '%"></i></div>' +
+        '<div class="cvalue">' + d.text + '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    return (
+      '<div class="cmp"><h3>' +
+      def.label +
+      '</h3>' +
+      rows +
+      '</div>'
+    );
+  }).join("");
+}
+
+function renderBars(){
+  renderParams();
+  renderCompare();
+}
+
+
+/* =========================================================
+   ANIMATION STATE
+========================================================= */
+
+let playing = false;
+let elapsed = 0;
+let lastTs = 0;
+let rafId = null;
+
+let schedule = null;
+let effCache = null;
+let firedPulses = 0;
+let firedDrips = 0;
+
+let particles = [];
+let liveDrips = [];
+let splats = [];
+
+let condomFill = 0;
+let condomTarget = 0;
+
+function fluidAlpha(eff){
+  return 0.35 +
+  (eff.opacity/10)*0.6;
+}
+
+function spawnDrip(scale){
+  liveDrips.push({
+    x:TIP.dripX,
+    baseY:TIP.bottomY,
+    r:(4.5 + effCache.volume*0.55)*scale,
+    scale:scale,
+    t:0,
+    phase:"form",
+    len:0,
+    dy:0,
+    vy:0,
+    alpha:fluidAlpha(effCache)
+  });
+}
+
+function spawnPulse(pulse){
+
+  const eff =
+  effCache;
+
+  const flyScore =
+  eff.velocity * pulse.strength;
+
+  const alpha =
+  fluidAlpha(eff);
+
+  if(flyScore >= 4.0){
+
+    const thick =
+    0.7 + (eff.viscosity/10)*0.9;
+
+    let count =
+    Math.round(
+      (4 + eff.volume*1.1) *
+      (0.55 + 0.5*pulse.strength)
+    );
+
+    if(eff.viscosity >= 7){
+      count =
+      Math.round(count*0.7);
+    }else if(eff.viscosity <= 4.5){
+      count =
+      Math.round(count*1.3);
+    }
+
+    for(
+      let i=0;
+      i<count;
+      i++
+    ){
+
+      const sp =
+      (120 + eff.velocity*30) *
+      pulse.strength *
+      (0.7 + Math.random()*0.55);
+
+      const ang =
+      -0.14 +
+      (Math.random()-0.5)*0.30;
+
+      particles.push({
+        x:TIP.x,
+        y:TIP.y,
+        vx:Math.cos(ang)*sp,
+        vy:Math.sin(ang)*sp,
+        r:(1.6 + Math.random()*1.8)*thick,
+        alpha:alpha*(0.75 + Math.random()*0.25)
+      });
+    }
+
+  }else{
+
+    spawnDrip(
+      Math.max(0.35, pulse.strength)
+    );
+  }
+}
+
+function stepAnimation(dt){
+
+  /* パルスの発火 */
+  while(
+    firedPulses < schedule.pulses.length &&
+    elapsed >= schedule.pulses[firedPulses].start
+  ){
+
+    const pulse =
+    schedule.pulses[firedPulses];
+
+    if(condition==="raw"){
+
+      spawnPulse(pulse);
+
+    }else{
+
+      /* ゴムあり：強さの累積配分で溜まりが満ちる */
+      let total = 0;
+      let upto = 0;
+
+      schedule.pulses.forEach((q, idx) => {
+        total += q.strength;
+        if(idx <= firedPulses){
+          upto += q.strength;
+        }
+      });
+
+      condomTarget =
+      (upto/total) *
+      (effCache.volume/10) *
+      0.96;
+    }
+
+    firedPulses++;
+
+    setStatus(
+      effCache.name +
+      " — Pulse " +
+      firedPulses +
+      " / " +
+      schedule.pulses.length
+    );
+  }
+
+  /* 残滴の発火（生のみ） */
+  if(condition==="raw"){
+
+    while(
+      firedDrips < schedule.drips.length &&
+      elapsed >= schedule.drips[firedDrips].start
+    ){
+
+      spawnDrip(
+        schedule.drips[firedDrips].scale
+      );
+
+      firedDrips++;
+    }
+  }
+
+  /* パーティクル */
+  for(
+    let i=particles.length-1;
+    i>=0;
+    i--
+  ){
+
+    const pt =
+    particles[i];
+
+    pt.vy += 620*dt;
+    pt.x += pt.vx*dt;
+    pt.y += pt.vy*dt;
+
+    if(pt.y >= FLOOR - pt.r){
+
+      splats.push({
+        x:pt.x,
+        r:pt.r*1.7,
+        alpha:pt.alpha,
+        life:1
+      });
+
+      particles.splice(i, 1);
+    }
+  }
+
+  /* 滴 */
+  for(
+    let i=liveDrips.length-1;
+    i>=0;
+    i--
+  ){
+
+    const d =
+    liveDrips[i];
+
+    const visc =
+    effCache.viscosity;
+
+    d.t += dt;
+
+    if(d.phase==="form"){
+
+      if(d.t >= 0.45){
+        d.phase = "stretch";
+        d.t = 0;
+      }
+
+    }else if(d.phase==="stretch"){
+
+      const maxLen =
+      (8 + visc*5.5) * d.scale;
+
+      const speed =
+      Math.max(6, 30 - visc*2.0);
+
+      d.len += speed*dt;
+
+      if(d.len >= maxLen){
+        d.len = maxLen;
+        d.phase = "fall";
+      }
+
+    }else if(d.phase==="fall"){
+
+      d.vy +=
+      900*dt*(1.15 - visc/13);
+
+      d.dy += d.vy*dt;
+
+      const centerY =
+      d.baseY + d.len + d.dy + d.r*0.6;
+
+      if(centerY >= FLOOR - d.r*0.4){
+
+        splats.push({
+          x:d.x,
+          r:d.r*1.8,
+          alpha:d.alpha,
+          life:1
+        });
+
+        liveDrips.splice(i, 1);
+      }
+    }
+  }
+
+  /* 飛沫の残像 */
+  for(
+    let i=splats.length-1;
+    i>=0;
+    i--
+  ){
+
+    splats[i].life -= dt*0.25;
+
+    if(splats[i].life <= 0){
+      splats.splice(i, 1);
+    }
+  }
+
+  /* ゴムありの溜まり */
+  condomFill +=
+  (condomTarget - condomFill) *
+  Math.min(1, dt*2.5);
+}
+
+
+/* =========================================================
+   DRAWING
+========================================================= */
+
+function rr(
+  x, y, w, h, r
+){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function drawShaft(){
+
+  ctx.lineWidth = 2;
+
+  /* 本体 */
+  ctx.fillStyle = "#2b2723";
+  ctx.strokeStyle = "#4a443c";
+  rr(110, CY-30, 580, 60, 30);
+  ctx.fill();
+  ctx.stroke();
+
+  /* 先端部 */
+  ctx.fillStyle = "#3a342c";
+  ctx.strokeStyle = "#554e44";
+  rr(660, CY-45, 178, 90, 45);
+  ctx.fill();
+  ctx.stroke();
+
+  /* 先端部の境目 */
+  ctx.beginPath();
+  ctx.moveTo(692, CY-38);
+  ctx.quadraticCurveTo(678, CY, 692, CY+38);
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.stroke();
+
+  /* 開口 */
+  ctx.beginPath();
+  ctx.ellipse(
+    836, CY, 5, 11, 0, 0, Math.PI*2
+  );
+  ctx.fillStyle = "#17140f";
+  ctx.fill();
+}
+
+function drawPouch(){
+
+  const px = TIP.x - 8;
+  const py = TIP.y;
+  const w = 106;
+  const h = 94;
+
+  const path = () => {
+    ctx.beginPath();
+    ctx.moveTo(px+6, py-16);
+    ctx.quadraticCurveTo(px-4, py, px+6, py+16);
+    ctx.quadraticCurveTo(px+16, py+h/2, px+w*0.55, py+h/2);
+    ctx.quadraticCurveTo(px+w, py+h/2, px+w, py+6);
+    ctx.quadraticCurveTo(px+w, py-h/2, px+w*0.55, py-h/2);
+    ctx.quadraticCurveTo(px+16, py-h/2, px+6, py-16);
+    ctx.closePath();
+  };
+
+  /* 中の液体 */
+  if(condomFill > 0.005 && effCache){
+
+    const innerH = h - 18;
+    const level =
+    condomFill * innerH;
+
+    ctx.save();
+    path();
+    ctx.clip();
+
+    ctx.fillStyle =
+      "rgba(240,236,224," +
+      fluidAlpha(effCache).toFixed(3) +
+      ")";
+
+    ctx.fillRect(
+      px,
+      py + h/2 - 6 - level,
+      w,
+      level + 6
+    );
+
+    ctx.restore();
+  }
+
+  /* 袋の輪郭 */
+  path();
+  ctx.fillStyle = "rgba(235,230,218,0.07)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(235,230,218,0.55)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function draw(){
+
+  ctx.clearRect(
+    0, 0,
+    canvas.width, canvas.height
+  );
+
+  /* 地面 */
+  ctx.beginPath();
+  ctx.moveTo(40, FLOOR);
+  ctx.lineTo(1160, FLOOR);
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  /* 人物名 */
+  const base =
+  currentProfile();
+
+  ctx.fillStyle = "#666";
+  ctx.font = "13px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(
+    base.name +
+    " — " +
+    (condition==="raw" ? "生" : "ゴムあり") +
+    " ／ 溜め " + storageDays + " 日",
+    36, 44
+  );
+
+  drawShaft();
+
+  if(condition==="condom"){
+    drawPouch();
+  }
+
+  /* 飛沫の残像（地面） */
+  for(const s of splats){
+    ctx.beginPath();
+    ctx.ellipse(
+      s.x, FLOOR+3, s.r, s.r*0.32, 0, 0, Math.PI*2
+    );
+    ctx.fillStyle =
+      "rgba(240,236,224," +
+      (s.alpha*0.5*s.life).toFixed(3) +
+      ")";
+    ctx.fill();
+  }
+
+  /* 飛ぶパーティクル */
+  for(const pt of particles){
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2);
+    ctx.fillStyle =
+      "rgba(242,238,228," +
+      pt.alpha.toFixed(3) +
+      ")";
+    ctx.fill();
+  }
+
+  /* 垂れる滴 */
+  for(const d of liveDrips){
+
+    const visc =
+    effCache ? effCache.viscosity : 5.5;
+
+    let dropCenterY;
+
+    if(d.phase==="form"){
+
+      const grow =
+      Math.min(1, d.t/0.45);
+
+      dropCenterY =
+      d.baseY + d.r*0.6*grow;
+
+      ctx.beginPath();
+      ctx.arc(
+        d.x, dropCenterY, d.r*grow, 0, Math.PI*2
+      );
+      ctx.fillStyle =
+        "rgba(242,238,228," +
+        d.alpha.toFixed(3) +
+        ")";
+      ctx.fill();
+
+    }else if(d.phase==="stretch"){
+
+      dropCenterY =
+      d.baseY + d.len + d.r*0.6;
+
+      /* 糸 */
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.baseY - 2);
+      ctx.lineTo(d.x, dropCenterY - d.r*0.4);
+      ctx.strokeStyle =
+        "rgba(242,238,228," +
+        (d.alpha*0.8).toFixed(3) +
+        ")";
+      ctx.lineWidth =
+      Math.max(1, d.r*0.28);
+      ctx.stroke();
+
+      /* 滴本体 */
+      ctx.beginPath();
+      ctx.ellipse(
+        d.x, dropCenterY, d.r*0.82, d.r*1.05, 0, 0, Math.PI*2
+      );
+      ctx.fillStyle =
+        "rgba(242,238,228," +
+        d.alpha.toFixed(3) +
+        ")";
+      ctx.fill();
+
+    }else{
+
+      /* fall */
+      dropCenterY =
+      d.baseY + d.len + d.dy + d.r*0.6;
+
+      ctx.beginPath();
+      ctx.ellipse(
+        d.x, dropCenterY, d.r*0.85, d.r, 0, 0, Math.PI*2
+      );
+      ctx.fillStyle =
+        "rgba(242,238,228," +
+        d.alpha.toFixed(3) +
+        ")";
+      ctx.fill();
+    }
+  }
+}
+
+
+/* =========================================================
+   PLAYBACK
+========================================================= */
+
+function resetAnimation(){
+
+  playing = false;
+  elapsed = 0;
+  firedPulses = 0;
+  firedDrips = 0;
+  schedule = null;
+  effCache = null;
+  particles = [];
+  liveDrips = [];
+  splats = [];
+  condomFill = 0;
+  condomTarget = 0;
+
+  if(rafId){
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  playButton.disabled = false;
+  playButton.textContent = "Play";
+
+  setStatus("Ready");
+  draw();
+}
+
+function tick(ts){
+
+  const dt =
+  Math.min(
+    0.05,
+    (ts - lastTs)/1000
+  );
+
+  lastTs = ts;
+  elapsed += dt;
+
+  stepAnimation(dt);
+  draw();
+
+  const active =
+  elapsed < schedule.end ||
+  particles.length > 0 ||
+  liveDrips.length > 0;
+
+  if(active){
+    rafId =
+    requestAnimationFrame(tick);
+  }else{
+    playing = false;
+    playButton.disabled = false;
+    playButton.textContent = "Play";
+    setStatus(
+      "Finished — " + effCache.name
+    );
+  }
+}
+
+function play(){
+
+  const base =
+  currentProfile();
+
+  effCache =
+  effectiveProfile(base);
+
+  schedule =
+  buildSchedule(base, effCache);
+
+  elapsed = 0;
+  firedPulses = 0;
+  firedDrips = 0;
+  particles = [];
+  liveDrips = [];
+  splats = [];
+  condomFill = 0;
+  condomTarget = 0;
+
+  playing = true;
+  lastTs = performance.now();
+
+  playButton.disabled = true;
+  playButton.textContent = "Playing…";
+
+  setStatus(
+    effCache.name + " — Start"
+  );
+
+  if(rafId){
+    cancelAnimationFrame(rafId);
+  }
+
+  rafId =
+  requestAnimationFrame(tick);
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+personChips.forEach(chip => {
+  chip.addEventListener("click", () => {
+
+    personChips.forEach(
+      c => c.classList.remove("active")
+    );
+
+    chip.classList.add("active");
+    currentId =
+    chip.dataset.person;
+
+    resetAnimation();
+    renderBars();
+  });
+});
+
+conditionChips.forEach(chip => {
+  chip.addEventListener("click", () => {
+
+    conditionChips.forEach(
+      c => c.classList.remove("active")
+    );
+
+    chip.classList.add("active");
+    condition =
+    chip.dataset.cond;
+
+    resetAnimation();
+  });
+});
+
+playButton.addEventListener(
+  "click",
+  play
+);
+
+resetButton.addEventListener(
+  "click",
+  resetAnimation
+);
+
+storageInput.addEventListener("input", () => {
+
+  storageDays =
+  parseInt(storageInput.value) || 0;
+
+  storageValue.textContent =
+  storageDays + " 日";
+
+  resetAnimation();
+  renderBars();
+});
+
+seedInput.addEventListener("change", () => {
+
+  seed =
+  parseInt(seedInput.value) || 1;
+
+  resetAnimation();
+  renderBars();
+});
+
+newSessionButton.addEventListener("click", () => {
+
+  seed =
+  Math.floor(
+    Math.random()*90000
+  ) + 1000;
+
+  seedInput.value = seed;
+
+  resetAnimation();
+  renderBars();
+});
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+renderBars();
+draw();
+
+</script>
+</body>
+</html>

@@ -498,7 +498,7 @@ Ready
 
 <br>
 
-フィニッシュ演出：勢い＝初速／量＝パーティクル総量／ゴムありは溜まり、生は放物線で表示
+フィニッシュ演出：勢い＝初速／量＝パーティクル総量／ゴムありは溜まり、生は放物線＋カプセル下部の累積量プールで表示
 
 </div>
 
@@ -924,7 +924,11 @@ function effectiveProfile(profile){
    condom: particles stay inside a translucent
    pool at the top of the capsule; only the
    amount fills up.
-   raw: particles fly out on parabolic arcs.
+   raw: particles fly out on parabolic arcs,
+   plus a cumulative amount pool rises at the
+   base of the capsule so the total amount
+   stays readable. The pool level is derived
+   from age, so seeking rewinds it too.
 ========================================================= */
 
 function effectiveFinish(profile){
@@ -1145,6 +1149,7 @@ function drawFinish(
   trackX,
   trackY,
   trackWidth,
+  trackHeight,
   age
 ){
 
@@ -1282,6 +1287,133 @@ function drawFinish(
 
 
     return;
+  }
+
+
+  /* RAW: cumulative amount pool at the capsule base */
+
+  let filled = 0;
+
+
+  for(
+    let k=0;
+    k<pulses;
+    k++
+  ){
+
+    filled +=
+
+    strengths[k]
+
+    *
+
+    clamp(
+      (
+        age-
+        k*interval
+      )/.35,
+      0,
+      1
+    );
+  }
+
+
+  const filledRatio =
+  sSum>0
+  ?
+  filled/sSum
+  :
+  0;
+
+
+  /* final level ∝ total amount (volume × pulse strengths) */
+
+  const poolH =
+  Math.min(
+    72,
+    fin.volume*
+    sSum*
+    filledRatio*
+    1.2
+  );
+
+
+  if(poolH>.5){
+
+    const px =
+    trackX+11;
+
+    const pw =
+    trackWidth-22;
+
+    const poolBottom =
+    trackY+
+    trackHeight-
+    10;
+
+    const py =
+    poolBottom-poolH;
+
+
+    ctx.save();
+
+
+    /* pale blue-grey, distinct from the condom pool */
+
+    ctx.fillStyle=
+    "rgba(168,198,232,.42)";
+
+    roundRect(
+      ctx,
+      px,
+      py,
+      pw,
+      poolH,
+      Math.min(
+        12,
+        pw/2
+      )
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle=
+    "rgba(205,226,250,.75)";
+
+    ctx.fillRect(
+      px+3,
+      py+1,
+      pw-6,
+      2
+    );
+
+
+    /* amount label beside the waterline */
+
+    ctx.fillStyle=
+    "rgba(220,234,250,.9)";
+
+    ctx.font=
+    "10px monospace";
+
+    ctx.textAlign="left";
+
+    ctx.fillText(
+      "量 "+
+      (
+        Number.isInteger(fin.volume)
+        ?
+        fin.volume.toFixed(1)
+        :
+        fin.volume
+      ),
+      px+4,
+      py-5
+    );
+
+
+    ctx.restore();
   }
 
 
@@ -3053,6 +3185,8 @@ function draw(){
         y,
 
         trackWidth,
+
+        trackHeight,
 
         elapsed-
         getTiming().windStart*
