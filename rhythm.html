@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Physical Rhythm Profile v6</title>
+<title>Physical Rhythm Profile v7</title>
 
 <style>
 *{
@@ -55,14 +55,17 @@ h1{
    PERSON CHIPS
 =========================== */
 
-.person-panel{
+.person-panel,
+.condition-panel{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
+  align-items:center;
   gap:9px;
 }
 
 .person-chip,
+.condition-chip,
 #toggleAll{
   border:1px solid #444;
   background:#242424;
@@ -78,10 +81,16 @@ h1{
     border-color .15s ease;
 }
 
-.person-chip.active{
+.person-chip.active,
+.condition-chip.active{
   background:#eee8df;
   color:#111;
   border-color:#eee8df;
+}
+
+.condition-label{
+  font-size:12px;
+  color:#999;
 }
 
 #toggleAll{
@@ -256,6 +265,21 @@ select{
   margin-top:14px;
 }
 
+.note-premise{
+  color:#777;
+  font-size:10px;
+  line-height:1.6;
+  text-align:center;
+  margin-bottom:9px;
+}
+
+.note-line{
+  color:#bbb;
+  font-size:11.5px;
+  line-height:1.85;
+  text-align:center;
+}
+
 @media(max-width:600px){
   body{
     padding-left:8px;
@@ -267,6 +291,7 @@ select{
   }
 
   .person-chip,
+  .condition-chip,
   #toggleAll{
     padding:8px 12px;
     font-size:13px;
@@ -279,7 +304,7 @@ select{
 
 <div class="app">
 
-<h1>PHYSICAL RHYTHM PROFILE v6</h1>
+<h1>PHYSICAL RHYTHM PROFILE v7</h1>
 
 <div class="subtitle">
 Tempo × Intensity × Rhythm × Sustain × Session Variation
@@ -314,6 +339,23 @@ Tempo × Intensity × Rhythm × Sustain × Session Variation
 
 <button class="person-chip active" data-person="hyunwoo">
 ヒョヌ
+</button>
+
+</div>
+
+
+<div class="panel condition-panel">
+
+<span class="condition-label">
+コンディション
+</span>
+
+<button class="condition-chip active" data-condition="condom">
+ゴムあり
+</button>
+
+<button class="condition-chip" data-condition="raw">
+生
 </button>
 
 </div>
@@ -454,6 +496,22 @@ Ready
 長時間設定ではCooldownを引き伸ばさず、
 中盤のフレーズ数と持続時間が増えます。
 
+<br>
+
+フィニッシュ演出：勢い＝初速／量＝パーティクル総量／ゴムありは溜まり、生は放物線で表示
+
+</div>
+
+
+<div class="panel note-panel">
+
+<div class="note-premise">
+生は、安定交際と避妊・検査の合意が済んだ世界線での比較です
+</div>
+
+<div id="personNotes">
+</div>
+
 </div>
 
 </div>
@@ -487,7 +545,23 @@ const profiles = [
   baseI:4.7,
   peakI:6.0,
   variation:.14,
-  rhythm:"steady"
+  rhythm:"steady",
+  raw:{
+    dT:0,
+    dPeakT:0,
+    dI:.5,
+    dPeakI:.6,
+    dVar:-.02
+  },
+  notes:{
+    condom:"装着の段取りまで含めて一定。止まる時間も彼の設計の内側。",
+    raw:"段取りが消えて、静かに底上げされる。変化は大きさより深さと持続。"
+  },
+  finish:{
+    velocity:5.5,
+    volume:5.5,
+    pulses:5
+  }
 },
 
 {
@@ -499,7 +573,27 @@ const profiles = [
   baseI:6.7,
   peakI:9.0,
   variation:.18,
-  rhythm:"hold"
+  rhythm:"hold",
+  raw:{
+    dT:.4,
+    dPeakT:.4,
+    dI:.8,
+    dPeakI:.9,
+    dVar:-.03
+  },
+  notes:{
+    condom:"装着は片手・無言。その間も密着は切れず、流れはほぼ落ちない。",
+    raw:"6人で一番変わる。体温と締まりが直接入り、高止まりがさらに平らに続く。"
+  },
+  finish:{
+    velocity:8.5,
+    volume:8.5,
+    pulses:7
+  },
+  finishRaw:{
+    dVelocity:.5,
+    dVolume:.5
+  }
 },
 
 {
@@ -511,7 +605,26 @@ const profiles = [
   baseI:6.6,
   peakI:8.0,
   variation:.40,
-  rhythm:"burst"
+  rhythm:"burst",
+  raw:{
+    dT:.5,
+    dPeakT:.3,
+    dI:.4,
+    dPeakI:.4,
+    dVar:.06
+  },
+  notes:{
+    condom:"『つけるまで』が唯一のブレーキ。探す・滑る・慌てるが波に混ざる。",
+    raw:"ブレーキが消えて立ち上がりが最速化。波は荒くなるが1波目は濃く短い。"
+  },
+  finish:{
+    velocity:9.0,
+    volume:6.0,
+    pulses:4
+  },
+  finishRaw:{
+    dVelocity:.5
+  }
 },
 
 {
@@ -523,7 +636,23 @@ const profiles = [
   baseI:5.5,
   peakI:7.0,
   variation:.32,
-  rhythm:"responsive"
+  rhythm:"responsive",
+  raw:{
+    dT:.2,
+    dPeakT:.2,
+    dI:.3,
+    dPeakI:.3,
+    dVar:.04
+  },
+  notes:{
+    condom:"出す所まで会話の温度。手際がよく、実務が場面を冷まさない。",
+    raw:"数値より会話が変わる。彼女の申告が増え、追従の材料が増える。"
+  },
+  finish:{
+    velocity:6.0,
+    volume:6.0,
+    pulses:5
+  }
 },
 
 {
@@ -535,7 +664,23 @@ const profiles = [
   baseI:5.5,
   peakI:8.0,
   variation:.48,
-  rhythm:"variable"
+  rhythm:"variable",
+  raw:{
+    dT:0,
+    dPeakT:.2,
+    dI:.4,
+    dPeakI:.5,
+    dVar:.10
+  },
+  notes:{
+    condom:"確認が増える。裏表を二度見る緊張が、そのまま彼らしさとして出る。",
+    raw:"日差がさらに開く。化ける日と、心配が割り込んで揺れる日が両方ある。"
+  },
+  finish:{
+    velocity:6.0,
+    volume:5.0,
+    pulses:5
+  }
 },
 
 {
@@ -547,7 +692,27 @@ const profiles = [
   baseI:6.6,
   peakI:8.0,
   variation:.16,
-  rhythm:"controlled"
+  rhythm:"controlled",
+  raw:{
+    dT:0,
+    dPeakT:.1,
+    dI:.5,
+    dPeakI:.5,
+    dVar:-.03
+  },
+  notes:{
+    condom:"開始前に手の届く所へセット済み。確認の手順が見えないほど静か。",
+    raw:"見た目はほぼ同じ。差は後半に出る。落ち込みが減り、持続が一番伸びる。"
+  },
+  finish:{
+    velocity:6.5,
+    volume:7.5,
+    pulses:6
+  },
+  finishRaw:{
+    dVolume:.5,
+    dPulses:1
+  }
 }
 
 ];
@@ -615,6 +780,8 @@ let recordedChunks = [];
 
 let recording = false;
 
+let condition = "condom";
+
 
 /* =========================================================
    HELPERS
@@ -671,6 +838,597 @@ function roundRect(
     height,
     r
   );
+}
+
+
+/* =========================================================
+   CONDITION
+
+   "condom" returns the profile unchanged, so the
+   default mode is numerically identical to before.
+   "raw" adds the per-person deltas, clamped to
+   Tempo/Intensity 0.5–10 and variation 0.05–0.90.
+========================================================= */
+
+function round2(v){
+  return Math.round(v*100)/100;
+}
+
+
+function effectiveProfile(profile){
+
+  if(
+    condition!=="raw" ||
+    !profile.raw
+  ){
+    return profile;
+  }
+
+
+  const r =
+  profile.raw;
+
+
+  return Object.assign(
+    {},
+    profile,
+    {
+      baseT:
+      clamp(
+        round2(profile.baseT+(r.dT||0)),
+        .5,
+        10
+      ),
+
+      peakT:
+      clamp(
+        round2(profile.peakT+(r.dPeakT||0)),
+        .5,
+        10
+      ),
+
+      baseI:
+      clamp(
+        round2(profile.baseI+(r.dI||0)),
+        .5,
+        10
+      ),
+
+      peakI:
+      clamp(
+        round2(profile.peakI+(r.dPeakI||0)),
+        .5,
+        10
+      ),
+
+      variation:
+      clamp(
+        round2(profile.variation+(r.dVar||0)),
+        .05,
+        .90
+      )
+    }
+  );
+}
+
+
+/* =========================================================
+   FINISH
+
+   Fires exactly at Wind-down start:
+   age = elapsed - windStart * duration.
+   Because age is derived from elapsed, playback,
+   seeking (including rewind) and recording all
+   stay consistent without extra state.
+
+   condom: particles stay inside a translucent
+   pool at the top of the capsule; only the
+   amount fills up.
+   raw: particles fly out on parabolic arcs.
+========================================================= */
+
+function effectiveFinish(profile){
+
+  if(!profile.finish){
+    return null;
+  }
+
+
+  let velocity =
+  profile.finish.velocity;
+
+  let volume =
+  profile.finish.volume;
+
+  let pulses =
+  profile.finish.pulses;
+
+
+  if(
+    condition==="raw" &&
+    profile.finishRaw
+  ){
+
+    const r =
+    profile.finishRaw;
+
+    velocity +=
+    r.dVelocity||0;
+
+    volume +=
+    r.dVolume||0;
+
+    pulses +=
+    r.dPulses||0;
+  }
+
+
+  /*
+    HARUKI: velocity and pulses swing with the
+    session seed, scaled by his variation.
+  */
+
+  if(
+    profile.id==="haruki"
+  ){
+
+    const seed =
+    parseInt(
+      seedInput.value
+    ) || 1;
+
+    const rv =
+    seededRandom(
+      seed,
+      "haruki-finish-velocity"
+    );
+
+    const rp =
+    seededRandom(
+      seed,
+      "haruki-finish-pulses"
+    );
+
+    velocity *=
+    1+
+    (rv-.5)*
+    2*
+    profile.variation*
+    .8;
+
+    pulses =
+    Math.round(
+      pulses+
+      (rp-.5)*
+      6*
+      profile.variation
+    );
+  }
+
+
+  return {
+    velocity:
+    clamp(
+      round2(velocity),
+      0,
+      10
+    ),
+
+    volume:
+    clamp(
+      round2(volume),
+      0,
+      10
+    ),
+
+    pulses:
+    clamp(
+      Math.round(pulses),
+      1,
+      12
+    )
+  };
+}
+
+
+function pulseStrength(
+  profile,
+  k,
+  pulses
+){
+
+  /* NAOTO: even, regular */
+
+  if(
+    profile.id==="naoto"
+  ){
+    return 1;
+  }
+
+
+  /* KEI: first biggest, slow decay */
+
+  if(
+    profile.id==="kei"
+  ){
+    return Math.max(
+      .35,
+      1-.09*k
+    );
+  }
+
+
+  /* SHOMA: first max, rapid decay */
+
+  if(
+    profile.id==="shoma"
+  ){
+    return Math.pow(
+      .55,
+      k
+    );
+  }
+
+
+  /* MINATO: accent in the middle */
+
+  if(
+    profile.id==="minato"
+  ){
+
+    const mid =
+    (pulses-1)/2;
+
+    return (
+      .6+
+      .6*
+      Math.exp(
+        -Math.pow(k-mid,2)/1.6
+      )
+    );
+  }
+
+
+  /* HARUKI: irregular */
+
+  if(
+    profile.id==="haruki"
+  ){
+    return (
+      .75+
+      .4*
+      Math.sin(
+        k*1.9+.6
+      )
+    );
+  }
+
+
+  /* HYUNWOO: even, measured */
+
+  if(
+    profile.id==="hyunwoo"
+  ){
+    return .95;
+  }
+
+
+  return 1;
+}
+
+
+function pulseInterval(profile){
+
+  if(
+    profile.id==="hyunwoo"
+  ){
+    return .62;
+  }
+
+
+  if(
+    profile.id==="shoma"
+  ){
+    return .40;
+  }
+
+
+  return .45;
+}
+
+
+function drawFinish(
+  profile,
+  fin,
+  centerX,
+  capsuleTopY,
+  trackX,
+  trackY,
+  trackWidth,
+  age
+){
+
+  if(
+    !fin ||
+    age<0
+  ){
+    return;
+  }
+
+
+  const pulses =
+  fin.pulses;
+
+  const interval =
+  pulseInterval(
+    profile
+  );
+
+
+  const strengths = [];
+
+  let sSum = 0;
+
+
+  for(
+    let k=0;
+    k<pulses;
+    k++
+  ){
+
+    const s =
+    pulseStrength(
+      profile,
+      k,
+      pulses
+    );
+
+    strengths.push(s);
+
+    sSum += s;
+  }
+
+
+  /* CONDOM: translucent pool fills up */
+
+  if(
+    condition==="condom"
+  ){
+
+    let level = 0;
+
+
+    for(
+      let k=0;
+      k<pulses;
+      k++
+    ){
+
+      level +=
+
+      strengths[k]
+
+      *
+
+      clamp(
+        (
+          age-
+          k*interval
+        )/.35,
+        0,
+        1
+      );
+    }
+
+
+    if(sSum>0){
+      level /= sSum;
+    }
+
+
+    const maxH =
+    14+
+    fin.volume*4.2;
+
+    const h =
+    level*maxH;
+
+
+    if(h<=0){
+      return;
+    }
+
+
+    const px =
+    trackX+11;
+
+    const pw =
+    trackWidth-22;
+
+    const py =
+
+    trackY+
+    10+
+    (maxH-h);
+
+
+    ctx.fillStyle=
+    "rgba(238,232,223,.38)";
+
+    roundRect(
+      ctx,
+      px,
+      py,
+      pw,
+      h,
+      Math.min(
+        14,
+        pw/2
+      )
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle=
+    "rgba(238,232,223,.55)";
+
+    ctx.fillRect(
+      px+3,
+      py+1,
+      pw-6,
+      2
+    );
+
+
+    return;
+  }
+
+
+  /* RAW: parabolic particles */
+
+  const total =
+  Math.round(
+    fin.volume*6
+  );
+
+  const life =
+  1.15;
+
+
+  for(
+    let k=0;
+    k<pulses;
+    k++
+  ){
+
+    const count =
+    Math.max(
+      1,
+      Math.round(
+        total*
+        strengths[k]/sSum
+      )
+    );
+
+
+    for(
+      let i=0;
+      i<count;
+      i++
+    ){
+
+      const r1 =
+      seededRandom(
+        9176,
+        profile.id+"-fp-"+k+"-"+i+"a"
+      );
+
+      const r2 =
+      seededRandom(
+        9176,
+        profile.id+"-fp-"+k+"-"+i+"b"
+      );
+
+      const r3 =
+      seededRandom(
+        9176,
+        profile.id+"-fp-"+k+"-"+i+"c"
+      );
+
+
+      const a =
+
+      age
+
+      -
+
+      k*interval
+
+      -
+
+      r3*.10;
+
+
+      if(
+        a<0 ||
+        a>life
+      ){
+        continue;
+      }
+
+
+      const v0 =
+
+      fin.velocity*
+      30*
+      strengths[k]*
+      (.7+.6*r1);
+
+
+      const ang =
+
+      (
+        -90+
+        (r2-.5)*70
+      )
+      *
+      Math.PI/180;
+
+
+      const vx =
+      Math.cos(ang)*v0;
+
+      const vy =
+      Math.sin(ang)*v0;
+
+      const g =
+      330;
+
+
+      const x =
+      centerX+
+      vx*a;
+
+      const y =
+
+      capsuleTopY
+
+      +
+
+      vy*a
+
+      +
+
+      .5*g*a*a;
+
+
+      const alpha =
+      (1-a/life)*.9;
+
+      const rad =
+      1.6+
+      r3*2.0;
+
+
+      ctx.fillStyle=
+      "rgba(238,232,223,"+
+      alpha.toFixed(3)+
+      ")";
+
+      ctx.beginPath();
+
+      ctx.arc(
+        x,
+        y,
+        rad,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fill();
+    }
+  }
 }
 
 
@@ -1036,6 +1794,12 @@ function getState(
   profile,
   progress
 ){
+
+  profile =
+  effectiveProfile(
+    profile
+  );
+
 
   const timing =
   getTiming();
@@ -1599,6 +2363,8 @@ chips.forEach(
 
         updateAllButton();
 
+        updateNotes();
+
         draw();
       }
     );
@@ -1636,12 +2402,118 @@ toggleAllButton.addEventListener(
 
     updateAllButton();
 
+    updateNotes();
+
     draw();
   }
 );
 
 
 updateAllButton();
+
+
+/* =========================================================
+   CONDITION CHIPS + NOTES
+========================================================= */
+
+const conditionChips =
+Array.from(
+ document.querySelectorAll(".condition-chip")
+);
+
+
+const personNotes =
+document.getElementById("personNotes");
+
+
+function updateNotes(){
+
+  const selected =
+  selectedProfiles();
+
+
+  personNotes.innerHTML="";
+
+
+  if(
+    selected.length===0
+  ){
+
+    const div =
+    document.createElement("div");
+
+    div.className=
+    "note-line";
+
+    div.textContent=
+    "人物を選択してください";
+
+    personNotes.appendChild(
+      div
+    );
+
+    return;
+  }
+
+
+  selected.forEach(
+    profile=>{
+
+      const div =
+      document.createElement("div");
+
+      div.className=
+      "note-line";
+
+      div.textContent=
+
+      profile.name+
+      "："+
+      profile.notes[
+        condition
+      ];
+
+      personNotes.appendChild(
+        div
+      );
+    }
+  );
+}
+
+
+conditionChips.forEach(
+  chip=>{
+
+    chip.addEventListener(
+      "click",
+      ()=>{
+
+        condition =
+        chip.dataset.condition;
+
+
+        conditionChips.forEach(
+          c=>{
+
+            c
+            .classList
+            .toggle(
+              "active",
+              c===chip
+            );
+
+          }
+        );
+
+
+        updateNotes();
+
+        draw();
+      }
+    );
+
+  }
+);
 
 
 /* =========================================================
@@ -2109,7 +2981,9 @@ function draw(){
       const peakRatio =
 
       state.intensity/
-      profile.peakI;
+      effectiveProfile(
+        profile
+      ).peakI;
 
 
       if(
@@ -2158,6 +3032,34 @@ function draw(){
       ctx.shadowBlur=0;
 
 
+      /* FINISH (fires at Wind-down start) */
+
+      drawFinish(
+
+        profile,
+
+        effectiveFinish(
+          profile
+        ),
+
+        centerX,
+
+        trackBottom-
+        7-
+        fillHeight,
+
+        x,
+
+        y,
+
+        trackWidth,
+
+        elapsed-
+        getTiming().windStart*
+        duration
+      );
+
+
       /* RANGE */
 
       ctx.fillStyle="#777";
@@ -2170,12 +3072,18 @@ function draw(){
       "10px monospace";
 
 
+      const effProfile =
+      effectiveProfile(
+        profile
+      );
+
+
       ctx.fillText(
 
         "T"+
-        profile.baseT+
+        effProfile.baseT+
         "–"+
-        profile.peakT,
+        effProfile.peakT,
 
         centerX,
         580
@@ -2185,9 +3093,9 @@ function draw(){
       ctx.fillText(
 
         "I"+
-        profile.baseI+
+        effProfile.baseI+
         "–"+
-        profile.peakI,
+        effProfile.peakI,
 
         centerX,
         598
@@ -2852,7 +3760,7 @@ function startRecording(){
 
     link.download=
 
-    "physical-rhythm-v6-"+
+    "physical-rhythm-v7-"+
     seedInput.value+
     ".webm";
 
@@ -2983,6 +3891,8 @@ profiles.forEach(
 
 
 draw();
+
+updateNotes();
 
 </script>
 
