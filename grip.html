@@ -2,28 +2,28 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>GRIP &amp; STROKE — 黒川慧（試作）</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;min-height:100vh;background:#050505;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:22px 12px 50px;user-select:none}
-.wrap{width:min(560px,100%);margin:auto}
-h1{margin:0;text-align:center;font-size:16px;letter-spacing:.14em}
-.subtitle{margin:8px 0 4px;text-align:center;color:#999;font-size:11.5px;line-height:1.7}
-.guide{text-align:center;color:#777;font-size:11px;line-height:1.8;margin-bottom:14px}
-.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
-.badge{background:#1c1c1c;border:1px solid #333;color:#ccc;border-radius:11px;padding:3px 9px;font-size:10.5px}
+html,body{height:100%}
+body{margin:0;height:100dvh;overflow:hidden;overscroll-behavior:none;background:#050505;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:10px 10px 12px;user-select:none;-webkit-user-select:none}
+.wrap{width:min(560px,100%);margin:auto;height:100%;display:flex;flex-direction:column}
+h1{margin:0;text-align:center;font-size:15px;letter-spacing:.14em}
+.subtitle{margin:5px 0 2px;text-align:center;color:#999;font-size:11px;line-height:1.6}
+.guide{text-align:center;color:#777;font-size:10.5px;line-height:1.7;margin-bottom:8px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:9px}
+.badge{background:#1c1c1c;border:1px solid #333;color:#ccc;border-radius:11px;padding:2px 8px;font-size:10px}
 .badge b{color:#eee8df}
-.stage{position:relative;height:400px;background:radial-gradient(ellipse at 50% 30%,#17171c 0%,#0a0a0c 70%);border:1px solid #2a2a2a;border-radius:24px;overflow:hidden;touch-action:none;cursor:grab}
+.stage{position:relative;flex:1;min-height:230px;background:radial-gradient(ellipse at 50% 30%,#17171c 0%,#0a0a0c 70%);border:1px solid #2a2a2a;border-radius:22px;overflow:hidden;touch-action:none;cursor:grab}
 .stage:active{cursor:grabbing}
-.shaft{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:64px;height:262px;border-radius:34px 34px 16px 16px;background:linear-gradient(180deg,#caa08c 0%,#bd9480 55%,#a87e6a 100%);box-shadow:inset -8px 0 14px rgba(0,0,0,.25),inset 6px 0 10px rgba(255,255,255,.08);transition:background .3s}
-.shaft:before{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:70px;height:64px;border-radius:50% 50% 46% 46%;background:inherit;filter:brightness(1.07);box-shadow:inset -6px 0 10px rgba(0,0,0,.18)}
+.shaft{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);width:64px;height:262px;border-radius:34px 34px 16px 16px;background:linear-gradient(180deg,#caa08c 0%,#bd9480 55%,#a87e6a 100%);box-shadow:inset -8px 0 14px rgba(0,0,0,.25),inset 6px 0 10px rgba(255,255,255,.08)}
+.shaft:before{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:70px;height:60px;border-radius:50% 50% 46% 46%;background:inherit;filter:brightness(1.07);box-shadow:inset -6px 0 10px rgba(0,0,0,.18)}
 .shaft.throb{animation:throb .9s ease-in-out infinite}
 @keyframes throb{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.018)}}
-.base{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:120px;height:26px;border-radius:50%;background:#0c0c0e;border:1px solid #222}
-.hand{position:absolute;left:50%;width:104px;height:44px;transform:translate(-50%,-50%);pointer-events:none;transition:none;z-index:3}
+.base{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:120px;height:24px;border-radius:50%;background:#0c0c0e;border:1px solid #222}
+.hand{position:absolute;left:50%;width:104px;height:44px;transform:translate(-50%,-50%);pointer-events:none;z-index:3}
 .hand .ring{position:absolute;inset:0;border:3px solid rgba(238,232,223,.85);border-radius:50%;background:rgba(20,16,14,.28)}
-.hand .gap{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:transparent;color:#eee8df;font-size:9px;white-space:nowrap}
 .hand .finger{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:rgba(238,232,223,.9)}
 .hand .f1{left:-4px;transform:translateY(-50%)}
 .hand .f2{right:-4px;transform:translateY(-50%)}
@@ -31,34 +31,34 @@ h1{margin:0;text-align:center;font-size:16px;letter-spacing:.14em}
 .zone{position:absolute;left:8px;color:#555;font-size:9.5px;pointer-events:none}
 .particle{position:absolute;border-radius:50%;background:rgba(240,238,230,.92);pointer-events:none;z-index:5}
 .pulsering{position:absolute;border:2px solid rgba(240,238,230,.5);border-radius:50%;pointer-events:none;z-index:4}
-.flash{position:absolute;inset:0;background:rgba(238,232,223,.0);pointer-events:none;z-index:6}
-.reaction{min-height:86px;background:#101010;border:1px solid #2a2a2a;border-radius:18px;padding:13px 15px;margin-top:14px}
-.rline{font-size:16px;line-height:1.6;min-height:26px}
-.rsub{font-size:11px;color:#888;margin-top:4px;min-height:15px}
-.rlog{margin-top:8px;border-top:1px solid #222;padding-top:8px;font-size:10.5px;color:#666;line-height:1.8}
-.panel{background:#101010;border:1px solid #2a2a2a;border-radius:18px;padding:13px 15px;margin-top:12px}
-.prow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:7px 0;font-size:11px;color:#aaa}
+.flash{position:absolute;inset:0;background:rgba(238,232,223,0);pointer-events:none;z-index:6}
+.reaction{background:#101010;border:1px solid #2a2a2a;border-radius:16px;padding:10px 13px;margin-top:10px}
+.rline{font-size:15px;line-height:1.55;min-height:24px}
+.rsub{font-size:10.5px;color:#888;margin-top:2px;min-height:14px}
+.rlog{margin-top:6px;border-top:1px solid #222;padding-top:6px;font-size:10px;color:#666;line-height:1.7}
+.panel{background:#101010;border:1px solid #2a2a2a;border-radius:16px;padding:9px 13px;margin-top:9px}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:5px 0;font-size:11px;color:#aaa}
 .bar{flex:1;height:8px;background:#232323;border-radius:6px;overflow:hidden}
 .bar i{display:block;height:100%;width:0%;background:#c9a183;border-radius:6px;transition:width .15s}
 .bar.hot i{background:#b3553f}
 .dots{display:flex;gap:5px}
 .dot{width:11px;height:11px;border-radius:50%;background:#2a2a2a;border:1px solid #3a3a3a}
 .dot.on{background:#eee8df}
-.stats{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#999}
+.stats{display:flex;gap:13px;flex-wrap:wrap;font-size:10.5px;color:#999}
 .stats b{color:#eee}
-.btns{display:flex;gap:9px;margin-top:14px}
-button{flex:1;background:#eee8df;color:#111;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:13px;cursor:pointer}
-button.ghost{background:#1d1d1d;color:#ccc;border:1px solid #343434}
-.summary{display:none;background:#141210;border:1px solid #3a332a;border-radius:18px;padding:14px 16px;margin-top:12px;font-size:12px;line-height:2;color:#ccc}
+.btns{display:flex;gap:9px;margin-top:9px}
+button{flex:1;background:#1d1d1d;color:#ccc;border:1px solid #343434;border-radius:13px;padding:10px;font-weight:800;font-size:12.5px;cursor:pointer}
+.summary{display:none;background:#141210;border:1px solid #3a332a;border-radius:16px;padding:11px 14px;margin-top:9px;font-size:11.5px;line-height:1.95;color:#ccc}
 .summary b{color:#eee8df}
-.note{color:#666;font-size:10.5px;line-height:1.9;margin-top:16px;text-align:center}
+.note{color:#666;font-size:10px;line-height:1.8;margin-top:9px;text-align:center}
+@media (max-height:730px){.guide,.note{display:none}.rlog{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>GRIP &amp; STROKE</h1>
-<div class="subtitle">黒川慧 — 試作 v0.1 ／ 触る側が主導権を持つツール</div>
-<div class="guide">ステージを指（またはマウス）で上下に擦ると、その速さ・止め方に彼が反応する。<br>先端寄りは効きが強い。限界近くで止めると「溜まり」が増えて、焦らしが効く。</div>
+<div class="subtitle">黒川慧 — 試作 v0.2 ／ 触る側が主導権を持つツール</div>
+<div class="guide">ステージを指で上下に擦ると、その速さ・止め方に彼が反応する。先端寄りは効きが強い。限界近くで止めると「溜まり」が増える。</div>
 <div class="badges">
 <span class="badge">長さ <b>15.8cm</b></span>
 <span class="badge">竿部最大周径 <b>12.9cm</b></span>
@@ -68,12 +68,12 @@ button.ghost{background:#1d1d1d;color:#ccc;border:1px solid #343434}
 <div class="stage" id="stage">
   <div class="base"></div>
   <div class="shaft" id="shaft"></div>
-  <div class="zone" style="top:56px">先端（効きが強い）</div>
-  <div class="zone" style="bottom:44px">根元</div>
-  <div class="hand" id="hand" style="top:210px">
+  <div class="zone" style="top:30px">先端（効きが強い）</div>
+  <div class="zone" style="bottom:36px">根元</div>
+  <div class="hand" id="hand" style="top:200px">
     <div class="ring"></div><div class="finger f1"></div><div class="finger f2"></div>
   </div>
-  <div class="handlabel" id="handlabel" style="top:210px">彩音の手</div>
+  <div class="handlabel" id="handlabel" style="top:200px">彩音の手</div>
   <div class="flash" id="flash"></div>
 </div>
 
@@ -97,16 +97,16 @@ button.ghost{background:#1d1d1d;color:#ccc;border:1px solid #343434}
 <div class="summary" id="summary"></div>
 
 <div class="btns">
-  <button class="ghost" id="reset">最初から</button>
+  <button id="reset">最初から</button>
 </div>
 
-<div class="note">数値は Physical Relationship Profile v4 の慧の値を使用。反応（声・行動）は男性側のみ生成し、彩音側の発言・反応は作らない（AYANE_CONTROL=USER）。触る側＝あなたの入力がそのまま刺激になる。</div>
+<div class="note">数値は Physical Relationship Profile v4 の慧の値を使用。反応（声・行動）は男性側のみ生成し、彩音側の発言・反応は作らない（AYANE_CONTROL=USER）。</div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
 const stage=$("stage"),shaft=$("shaft"),hand=$("hand"),handlabel=$("handlabel");
-const S={arousal:0,reserve:0,strokes:0,edges:0,phase:"play",startT:0,lastDir:0,lastY:0,lastT:0,speed:0,handY:210,down:false,idle:0,grabCD:0,lock:0,lastLineT:0,band:0,elapsed:0};
+const S={arousal:0,reserve:0,strokes:0,edges:0,phase:"play",startT:0,lastDir:0,travel:0,lastY:0,lastT:0,speed:0,handY:200,minY:90,maxY:300,down:false,idle:0,grabCD:0,lock:0,fastT:0,lastLineT:0,band:0,elapsed:0};
 const LINES={
  low:["……遅いな","……その調子でええ","……っ","……手、冷たいな"],
  mid:["……は、……","……悪くない","……もう少し速く","……っ、……ええ"],
@@ -130,7 +130,15 @@ function say(txt,sub){
 }
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function bandOf(a){return a<30?0:a<55?1:a<75?2:3}
-function zoneMult(y){return y<150?1.45:y>300?0.8:1.0}
+function zoneMult(y){const rel=(S.maxY-y)/Math.max(1,(S.maxY-S.minY));return rel>0.7?1.45:rel<0.18?0.8:1.0}
+function fit(){
+  const h=stage.clientHeight;
+  const shaftH=Math.max(180,Math.min(262,h-118));
+  shaft.style.height=shaftH+"px";
+  S.minY=h-30-shaftH+36;S.maxY=h-64;
+  S.handY=Math.max(S.minY,Math.min(S.maxY,S.handY||((S.minY+S.maxY)/2)));
+}
+window.addEventListener("resize",fit);
 let lastFrame=performance.now();
 function loop(now){
   const dt=Math.min(0.05,(now-lastFrame)/1000);lastFrame=now;
@@ -144,7 +152,7 @@ function loop(now){
       let eff=Math.min(S.speed,900)/900;
       if(S.speed>=250&&S.speed<=650)eff*=1.15;
       S.arousal+=eff*zoneMult(S.handY)*dt*13;
-      if(S.speed>820){S.fastT=(S.fastT||0)+dt;if(S.fastT>1.2&&S.grabCD<=0){grab()}}else S.fastT=0;
+      if(S.speed>820){S.fastT+=dt;if(S.fastT>1.2&&S.grabCD<=0)grab()}else S.fastT=0;
       const b=bandOf(S.arousal);
       if(b!==S.band){S.band=b;say(pick([LINES.low,LINES.mid,LINES.high,LINES.very][b]),["まだ浅い。","半分ほど。","だいぶ来ている。","限界が近い。"][b])}
       else if(now-S.lastLineT>4500){say(pick([LINES.low,LINES.mid,LINES.high,LINES.very][b]))}
@@ -157,7 +165,6 @@ function loop(now){
     if(S.arousal>=100){S.arousal=100;climax()}
     S.arousal=Math.max(0,Math.min(100,S.arousal));
   }
-  // visuals
   const a=S.arousal;
   shaft.style.background=`linear-gradient(180deg,hsl(${18-a*0.08},${42+a*0.22}%,${66-a*0.13}%) 0%,hsl(${14-a*0.07},${40+a*0.2}%,${60-a*0.12}%) 55%,hsl(${12-a*0.06},${38+a*0.18}%,${54-a*0.1}%) 100%)`;
   shaft.classList.toggle("throb",a>70&&S.phase==="play");
@@ -173,16 +180,16 @@ function loop(now){
 function grab(){
   S.grabCD=6;S.lock=1.2;S.fastT=0;S.arousal=Math.max(0,S.arousal-6);
   say(LINES.grab,"手首を掴まれた。少し落とすと離してくれる。");
-  flash("rgba(238,232,223,.10)");
+  flash();
 }
 function edge(){
   S.reserve++;S.edges++;S.arousal=76;S.idle=0;
   say(pick(LINES.edge),"寸止め成功。溜まり +1。");
-  flash("rgba(238,232,223,.14)");
+  flash();
   try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
 }
-function flash(bg){
-  const f=$("flash");f.style.background=bg;f.style.transition="none";
+function flash(){
+  const f=$("flash");f.style.transition="none";f.style.background="rgba(238,232,223,.13)";
   requestAnimationFrame(()=>{f.style.transition="background .5s";f.style.background="rgba(238,232,223,0)"});
 }
 function particle(x,y,big){
@@ -190,8 +197,8 @@ function particle(x,y,big){
   const s=big?7+Math.random()*6:4+Math.random()*4;
   p.style.width=s+"px";p.style.height=s+"px";p.style.left=x+"px";p.style.top=y+"px";
   stage.appendChild(p);
-  const dx=(Math.random()-0.5)*130,dy=-(60+Math.random()*130),dx2=dx*1.4;
-  p.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${dx2}px,${dy+90}px)`,opacity:0}],{duration:750+Math.random()*450,easing:"cubic-bezier(.17,.67,.35,1)"}).onfinish=()=>p.remove();
+  const dx=(Math.random()-0.5)*130,dy=-(60+Math.random()*130);
+  p.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${dx*1.4}px,${dy+90}px)`,opacity:0}],{duration:750+Math.random()*450,easing:"cubic-bezier(.17,.67,.35,1)"}).onfinish=()=>p.remove();
 }
 function ring(x,y){
   const r=document.createElement("div");r.className="pulsering";
@@ -202,7 +209,7 @@ function ring(x,y){
 function climax(){
   S.phase="finish";say(LINES.climax,"限界を超えた。");
   try{navigator.vibrate&&navigator.vibrate([60,40,60])}catch(_){}
-  const cx=stage.clientWidth/2,ty=88;
+  const cx=stage.clientWidth/2,ty=S.minY-4;
   let n=0;const total=7;
   const iv=setInterval(()=>{
     n++;ring(cx,ty);
@@ -220,34 +227,36 @@ function climax(){
     }
   },700);
 }
-// input
-function posY(ev){const r=stage.getBoundingClientRect();return Math.max(96,Math.min(330,(ev.clientY-r.top)))}
+function posY(ev){const r=stage.getBoundingClientRect();return Math.max(S.minY,Math.min(S.maxY,(ev.clientY-r.top)))}
 stage.addEventListener("pointerdown",ev=>{
   if(S.phase!=="play")return;
+  ev.preventDefault();
   S.down=true;S.lastY=posY(ev);S.lastT=performance.now();S.handY=S.lastY;
   if(!S.startT){S.startT=performance.now();say(LINES.start,"触り始めた。")}
-  stage.setPointerCapture(ev.pointerId);
+  try{stage.setPointerCapture(ev.pointerId)}catch(_){}
 });
 stage.addEventListener("pointermove",ev=>{
   if(!S.down||S.phase!=="play")return;
+  ev.preventDefault();
   const y=posY(ev),now=performance.now(),dt=(now-S.lastT)/1000;
   if(dt>0){
     const dy=y-S.lastY,inst=Math.abs(dy)/dt;
     S.speed=S.speed*0.55+inst*0.45;
     const dir=Math.sign(dy);
-    if(dir!==0&&S.lastDir!==0&&dir!==S.lastDir&&Math.abs(dy)>2){/* reversal counted below */}
     if(dir!==0){
-      if(S.lastDir!==0&&dir!==S.lastDir){S.pending=(S.pending||0)+Math.abs(S.travel||0);if(Math.abs(S.travel||0)>24){S.strokes++}S.travel=0}
-      S.lastDir=dir;S.travel=(S.travel||0)+dy;
+      if(S.lastDir!==0&&dir!==S.lastDir){if(Math.abs(S.travel)>24)S.strokes++;S.travel=0}
+      S.lastDir=dir;S.travel+=dy;
     }
     S.lastY=y;S.lastT=now;S.handY=y;
   }
 });
 function up(){S.down=false;S.speed=0;S.travel=0}
 stage.addEventListener("pointerup",up);stage.addEventListener("pointercancel",up);
+stage.addEventListener("touchmove",ev=>{ev.preventDefault()},{passive:false});
+stage.addEventListener("touchstart",ev=>{ev.preventDefault()},{passive:false});
 setInterval(()=>{if(!S.down)S.speed=0},120);
 $("reset").onclick=()=>location.reload();
-requestAnimationFrame(loop);
+fit();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
