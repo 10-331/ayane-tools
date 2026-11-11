@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AYANE TOOLS — 佐倉彩音プロジェクト ツール置き場</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#050505;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:34px 14px 56px}
+.wrap{width:min(880px,100%);margin:auto}
+h1{margin:0;text-align:center;font-size:19px;letter-spacing:.16em}
+.subtitle{margin:9px 0 6px;text-align:center;color:#999;font-size:12px;line-height:1.7}
+.note{text-align:center;color:#666;font-size:10.5px;line-height:1.8;margin-bottom:26px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+a.card{display:block;background:#101010;border:1px solid #2a2a2a;border-radius:20px;padding:20px 18px;text-decoration:none;color:#eee;transition:border-color .15s ease,transform .15s ease}
+a.card:hover{border-color:#eee8df;transform:translateY(-2px)}
+.ic{font-size:30px;line-height:1}
+.name{font-size:15px;font-weight:800;letter-spacing:.05em;margin-top:12px}
+.jp{font-size:12px;color:#eee8df;margin-top:3px}
+.desc{font-size:11.5px;color:#999;line-height:1.85;margin-top:9px}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.badge{background:#242424;border:1px solid #3a3a3a;color:#ccc;border-radius:11px;padding:3px 9px;font-size:10px}
+.badge.ver{background:#eee8df;color:#111;border-color:#eee8df;font-weight:700}
+.open{margin-top:14px;font-size:12px;color:#eee8df;font-weight:700}
+.section{margin:30px 0 12px;font-size:12px;letter-spacing:.1em;color:#bbb;font-weight:700}
+.about{background:#101010;border:1px solid #2a2a2a;border-radius:20px;padding:16px 18px;font-size:11.5px;color:#999;line-height:1.9}
+.about b{color:#ddd}
+.foot{text-align:center;color:#555;font-size:10px;line-height:1.9;margin-top:26px}
+.foot a{color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>AYANE TOOLS</h1>
+<div class="subtitle">佐倉彩音プロジェクト — ツール置き場（総合ページ）</div>
+<div class="note">全部で4つの単体ツール。カードをタップでそのまま開ける。<br>各ツールは単一HTMLファイルで完結し、外部依存はない。</div>
+
+<div class="grid">
+
+<a class="card" href="play.html">
+  <div class="ic">💠</div>
+  <div class="name">DYAD INTERACTION SIMULATOR</div>
+  <div class="jp">二人の関係性シミュレーター</div>
+  <div class="desc">二人の関係性をリアルタイムにシミュレーションするツール。プロジェクト最古参で、関係性の動きを見る土台。</div>
+  <div class="meta"><span class="badge ver">v4</span><span class="badge">関係性</span><span class="badge">play.html</span></div>
+  <div class="open">開く ›</div>
+</a>
+
+<a class="card" href="rhythm.html">
+  <div class="ic">🌊</div>
+  <div class="name">PHYSICAL RHYTHM PROFILE</div>
+  <div class="jp">身体リズムの可視化</div>
+  <div class="desc">Tempo × Intensity × Rhythm × Sustain をカプセルの伸縮で可視化。6人分を並べて再生・比較でき、動画録画（WebM）にも対応。</div>
+  <div class="meta"><span class="badge ver">v6</span><span class="badge">6人比較</span><span class="badge">録画対応</span><span class="badge">rhythm.html</span></div>
+  <div class="open">開く ›</div>
+</a>
+
+<a class="card" href="scale.html">
+  <div class="ic">📏</div>
+  <div class="name">PHYSICAL DIFFERENCE PROFILE</div>
+  <div class="jp">体格差コンパレータ</div>
+  <div class="desc">彩音（145cm）と6人の体格差を、同縮尺シルエット・身体と手の重なりバー・Hand Scale ゲージで比較。肩／あごのガイドライン付き。</div>
+  <div class="meta"><span class="badge ver">v0.3</span><span class="badge">体格差</span><span class="badge">Hand Scale</span><span class="badge">scale.html</span></div>
+  <div class="open">開く ›</div>
+</a>
+
+<a class="card" href="phone.html">
+  <div class="ic">📱</div>
+  <div class="name">PHONE PEEK</div>
+  <div class="jp">黒川慧のスマホを覗く</div>
+  <div class="desc">慧のスマホを覗く試作。場面は「会った日の夜 23:47」。ロック画面→ホーム→LINE風チャット／メモ／検索履歴／ヘルスケア＋裏側ステータス。スマホ幅では全画面表示。</div>
+  <div class="meta"><span class="badge ver">v0.2</span><span class="badge">慧</span><span class="badge">場面固定</span><span class="badge">phone.html</span></div>
+  <div class="open">開く ›</div>
+</a>
+
+</div>
+
+<div class="section">ABOUT</div>
+<div class="about">
+<b>データの出典</b>：Physical Relationship Profile v4（正本）／主要男性6人 人物別カード。<br>
+<b>運用</b>：彩音の発言・感情・意思決定はユーザーが確定する（AYANE_CONTROL=USER）。ツール側の表示は資料の可視化と、男性側・世界側の生成サンプル。<br>
+<b>置き場</b>：このリポジトリ（ayane-tools）が佐倉彩音側のWeb拠点。笹井綾側（project／novel）とは分けてある。
+</div>
+
+<div class="foot">
+<a href="https://github.com/10-331/ayane-tools">GitHub — 10-331/ayane-tools</a><br>
+AYANE TOOLS 総合ページ
+</div>
+</div>
+</body>
+</html>
