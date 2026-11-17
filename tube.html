@@ -102,7 +102,8 @@ function layout(){
 function reset(){
   layout();
   window._st = { depth: 0, target: 0, excite: 4, charge: 0, strokes: 0, lastDir: 0, turnDepth: 0,
-    still: 0, fastTime: 0, lock: 0, finished: false, pulses: 0, deepHitCd: 0, lastLine: 0, band: 0, wet: 0.15 };
+    still: 0, fastTime: 0, lock: 0, finished: false, pulses: 0, deepHitCd: 0, lastLine: 0, band: 0, wet: 0.15,
+    phase: 0, squeeze: 0, sqLineCd: 0, finishPulse: 0 };
   voiceTxt.textContent = '……入れるぞ。ゆっくりな';
   logEl.textContent = '深さ・速さ・止め方で、彼の声と行動が変わる。奥まで届くと反応が跳ねる。';
   place();
@@ -175,20 +176,43 @@ stage.addEventListener('pointermove', e => {
 stage.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
 function bandOf(e){ return e < 30 ? 0 : e < 55 ? 1 : e < 82 ? 2 : 3; }
+const tubeInner = document.getElementById('tubeInner');
+const SQ_LINES = ['……っ、中、締め付けてくる', '……きゅっと、……すんな', '……締まる度に、奥、……っ', '……お前の中、波打っとる'];
 setInterval(() => {
   const st = window._st; if (!st) return;
   const now = performance.now();
   if (st.lock > 0) st.lock -= 0.1;
   if (st.deepHitCd > 0) st.deepHitCd -= 0.1;
+  if (st.sqLineCd > 0) st.sqLineCd -= 0.1;
   if (!dragging || vel < 30) st.still += 0.1; else st.still = 0;
   vel *= 0.82;
+  /* ---- 筒の収縮（きゅ、きゅ）：興奮で速く・強く。フィニッシュ時は脈動同期 ---- */
+  const a01 = Math.max(0, Math.min(1, st.excite / 100));
+  const rate = st.finished ? 0 : 0.45 + a01 * 1.5;            // Hz相当
+  st.phase += rate * 0.1 * Math.PI * 2;
+  const wave = Math.pow(Math.max(0, Math.sin(st.phase)), 2.2); // 締まる時だけ鋭い波形
+  const amp = st.finished ? st.finishPulse : 0.25 + a01 * 0.75;
+  st.squeeze = wave * amp;
+  const sq = st.squeeze;
+  tubeInner.style.width = (76 - sq * 17) + 'px';
+  tubeInner.style.borderColor = `rgba(229,139,177,${0.35 + sq * 0.5})`;
+  shaft.style.transform = `translateX(-50%) scaleX(${1 - sq * 0.07 * (0.3 + st.depth)})`;
+  // 締め付けの効果：入っている間は、動かなくても少しずつ効く。動いていると上乗せ
+  if (!st.finished && st.depth > 0.35 && sq > 0.55){
+    st.excite += 0.14 + (vel > 60 ? 0.22 : 0);
+    if (sq > 0.8 && st.depth > 0.6 && st.sqLineCd <= 0 && st.excite > 45){
+      st.sqLineCd = 7; say(pick(SQ_LINES)); gasp(0.45);
+      logEl.textContent = '筒がきゅっと締まった。彼の声が漏れる。';
+    }
+  }
+  if (st.finishPulse > 0) st.finishPulse = Math.max(0, st.finishPulse - 0.09);
   // 自然減衰と入口の熱
   if (!st.finished){
     st.excite = Math.max(2, st.excite - (st.still > 0.4 ? 0.55 : 0.16));
     const heat = Math.min(1, vel / 800);
-    rimHot.style.opacity = heat * 0.85;
-    rim.style.transform = `translateX(-50%) scaleX(${1 - Math.min(0.16, vel/5200)})`;
-    wallGlow.style.opacity = 0.2 + st.excite/100 * 0.55;
+    rimHot.style.opacity = Math.max(heat * 0.85, sq * 0.55);
+    rim.style.transform = `translateX(-50%) scaleX(${1 - Math.min(0.16, vel/5200) - sq * 0.10})`;
+    wallGlow.style.opacity = 0.2 + st.excite/100 * 0.4 + sq * 0.3;
     gloss.style.opacity = 0.2 + st.wet * 0.55;
     // 寸止め判定：高帯で深いまま止める
     if (st.excite >= 82 && st.depth > 0.6 && st.still > 1.6 && st.lock <= 0){
@@ -220,7 +244,7 @@ function finish(){
   logEl.textContent = '奥で脈打ち始めた。';
   let n = 0; const total = 7;
   const iv = setInterval(() => {
-    n++; gasp(0.55);
+    n++; gasp(0.55); st.finishPulse = 1; // 脈動のたびに筒がきゅっと締まる
     rimHot.style.opacity = 0.9; setTimeout(() => rimHot.style.opacity = 0.2, 160);
     logEl.textContent = `脈動 ${n} ― 奥に放たれている。` + (st.charge >= 3 ? '溜まりの分、量が多い。' : st.charge >= 1 ? 'いつもより多い。' : '');
     if (n >= total){ clearInterval(iv);
