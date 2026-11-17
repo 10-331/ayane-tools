@@ -16,7 +16,6 @@
   #btnSound.on{ color:var(--txt); border-color:var(--acc); }
   #stage{ position:relative; flex:1; touch-action:none; overflow:hidden;
     background:radial-gradient(120% 90% at 50% 0%, #181221 0%, #0d0b10 60%); }
-  /* 筒（つつ）：∩型のアーチ。入口が下、奥が上 */
   #tubeWrap{ position:absolute; left:50%; top:4%; transform:translateX(-50%); width:170px; height:62%; pointer-events:none; }
   #tubeOuter{ position:absolute; inset:0; border:3px solid #4a3a56; border-bottom:none; border-radius:90px 90px 0 0;
     background:linear-gradient(180deg, rgba(229,139,177,0.05), rgba(229,139,177,0.13) 75%, rgba(229,139,177,0.20)); }
@@ -26,9 +25,8 @@
     background:linear-gradient(180deg, rgba(20,12,20,.25), rgba(60,20,40,.35)); overflow:hidden; }
   #wallGlow{ position:absolute; inset:0; background:radial-gradient(60% 40% at 50% 100%, rgba(229,139,177,.5), transparent 70%); opacity:.25; }
   #rim{ position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:92px; height:20px; border-radius:50%;
-    border:3px solid #6b4a63; background:radial-gradient(50% 60% at 50% 40%, #3a2233, #241423); transition:transform .08s; z-index:3; }
+    border:3px solid #6b4a63; background:radial-gradient(50% 60% at 50% 40%, #3a2233, #241423); z-index:3; }
   #rimHot{ position:absolute; inset:-3px; border-radius:50%; border:3px solid var(--acc); opacity:0; }
-  /* 竿 */
   #shaft{ position:absolute; left:50%; width:64px; transform:translateX(-50%); z-index:2;
     background:linear-gradient(90deg, var(--skin2), var(--skin) 30%, #e2b09c 50%, var(--skin) 70%, var(--skin2));
     border-radius:32px 32px 10px 10px; box-shadow:inset 0 -14px 22px rgba(90,40,30,.35); }
@@ -46,13 +44,15 @@
   footer{ padding:6px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:8px; align-items:center; }
   .chip{ flex:1; text-align:center; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 4px; font-size:11px; color:var(--sub); }
   .chip b{ display:block; font-size:14.5px; color:var(--txt); font-variant-numeric:tabular-nums; }
+  .chip.hot{ border-color:var(--acc); }
   #btnReset{ flex:none; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--sub); font-size:12px; cursor:pointer; }
-  .hint{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); font-size:11px; color:var(--sub); letter-spacing:.08em; pointer-events:none; opacity:.85; white-space:nowrap; }
+  .hint{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); font-size:11.5px; color:var(--txt); letter-spacing:.1em; pointer-events:none; opacity:.9; white-space:nowrap;
+    background:rgba(23,19,29,.75); border:1px solid var(--line); padding:7px 14px; border-radius:999px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>TUBE<small>筒（∩）に対して抜き差しする挿入シミュレーター／慧・試作<br>上下にドラッグ。深さと速さで反応が変わる</small></h1>
+  <h1>TUBE<small>彼は自分で動く。あんたの仕事は「締める」こと／慧・試作<br>画面を押し続けると締まる。奥で締めると、効く</small></h1>
   <button id="btnSound">音 OFF</button>
 </header>
 
@@ -65,15 +65,15 @@
   <div id="shaft"><div id="tip"></div><div id="gloss"></div></div>
   <div id="depthMark"><div class="rail"></div><div class="fill" id="depthFill"></div>
     <div class="lbl" style="top:0">奥</div><div class="lbl" style="top:100%">入口</div></div>
-  <div class="hint" id="hint">ドラッグで抜き差し</div>
+  <div class="hint" id="hint">押し続ける ＝ 締める</div>
 </div>
 
-<div id="voice"><span class="who">慧</span><span id="voiceTxt">……入れるぞ。ゆっくりな</span></div>
-<div id="log">深さ・速さ・止め方で、彼の声と行動が変わる。奥まで届くと反応が跳ねる。</div>
+<div id="voice"><span class="who">慧</span><span id="voiceTxt">……動くぞ。締めるなら、今のうち</span></div>
+<div id="log">彼のリズムは興奮で変わる。締めのタイミングはあんた次第。</div>
 
 <footer>
-  <div class="chip">深さ<b id="cDepth">0%</b></div>
-  <div class="chip">ストローク<b id="cStroke">0</b></div>
+  <div class="chip">彼の動き<b id="cMove">ゆっくり</b></div>
+  <div class="chip" id="chipSq">締め<b id="cSq">―</b></div>
   <div class="chip">溜まり<b id="cCharge">0</b></div>
   <button id="btnReset">最初から</button>
 </footer>
@@ -85,10 +85,12 @@ const rim = document.getElementById('rim');
 const rimHot = document.getElementById('rimHot');
 const wallGlow = document.getElementById('wallGlow');
 const gloss = document.getElementById('gloss');
+const tubeInner = document.getElementById('tubeInner');
 const voiceTxt = document.getElementById('voiceTxt');
 const logEl = document.getElementById('log');
 const hint = document.getElementById('hint');
-const cDepth = document.getElementById('cDepth'), cStroke = document.getElementById('cStroke'), cCharge = document.getElementById('cCharge');
+const cMove = document.getElementById('cMove'), cSq = document.getElementById('cSq'), cCharge = document.getElementById('cCharge');
+const chipSq = document.getElementById('chipSq');
 const depthFill = document.getElementById('depthFill');
 
 let S = null;
@@ -99,152 +101,181 @@ function layout(){
   shaft.style.height = shaftLen + 'px';
   S = { H: r.height, tubeTop, tubeH, shaftLen, rimY: tubeTop + tubeH };
 }
+
+const st = { depth: 0.1, excite: 4, charge: 0, finished: false,
+  phase: 0, mode: 'shallow', modeStrokes: 0, restT: 0, holdT: 0, holdUsed: false,
+  userSq: 0, holding: false, holdTime: 0, fatigue: 1,
+  autoPhase: 0, squeeze: 0, strokes: 0, lastLine: 0, band: 0, sqLineCd: 0, deepCd: 0, finishPulse: 0, wet: 0.2, started: false };
+
 function reset(){
   layout();
-  window._st = { depth: 0, target: 0, excite: 4, charge: 0, strokes: 0, lastDir: 0, turnDepth: 0,
-    still: 0, fastTime: 0, lock: 0, finished: false, pulses: 0, deepHitCd: 0, lastLine: 0, band: 0, wet: 0.15,
-    phase: 0, squeeze: 0, sqLineCd: 0, finishPulse: 0 };
-  voiceTxt.textContent = '……入れるぞ。ゆっくりな';
-  logEl.textContent = '深さ・速さ・止め方で、彼の声と行動が変わる。奥まで届くと反応が跳ねる。';
+  Object.assign(st, { depth: 0.1, excite: 4, charge: 0, finished: false, phase: 0, mode: 'shallow', modeStrokes: 0,
+    restT: 0, holdT: 0, holdUsed: false, userSq: 0, holding: false, holdTime: 0, fatigue: 1,
+    autoPhase: 0, squeeze: 0, strokes: 0, lastLine: 0, band: 0, sqLineCd: 0, deepCd: 0, finishPulse: 0, wet: 0.2, started: false });
+  voiceTxt.textContent = '……動くぞ。締めるなら、今のうち';
+  logEl.textContent = '彼のリズムは興奮で変わる。締めのタイミングはあんた次第。';
+  cCharge.textContent = '0';
   place();
 }
 function place(){
-  const st = window._st;
-  // depth 0 = 先端が入口の手前, 1 = 根元まで
   const tipTravel = S.tubeH * 0.98;
-  const tipY = S.rimY + 26 - st.depth * tipTravel; // 先端のY
-  shaft.style.top = (tipY) + 'px';
+  const tipY = S.rimY + 26 - st.depth * tipTravel;
+  shaft.style.top = tipY + 'px';
   depthFill.style.height = (st.depth * 100) + '%';
-  cDepth.textContent = Math.round(st.depth * 100) + '%';
 }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function say(t){ voiceTxt.textContent = t; }
 
 const LINES = {
-  low:  ['……ゆっくりな', '……そう、その調子', '……浅いぞ', '……もっと奥まで来い'],
-  mid:  ['……っ、いい', '……深いな、お前', '……その速さ、悪くない', '……っ、奥、効く'],
-  high: ['……待て、……っ', '……奥ばっか、狙うな……っ', '……出そう、だ……っ', '……止めるな、……今は'],
-  deep: ['……っ、奥……！', '……そこ、……深すぎる', '……届いとる、……っ'],
-  shallow: ['……抜けそうだぞ', '……浅い。もっと入れろ'],
+  start: ['……入れる。……動くぞ', '……ゆっくり、始める'],
+  shallow: ['……まだ浅い。慣らす', '……焦らすな、こっちが決める'],
+  build: ['……いい締まりだ', '……そう、その調子', '……もっと来い'],
+  deep: ['……っ、奥……！', '……深い、……っ', '……届いとる'],
+  sq: ['……っ、中、締め付けてくる', '……きゅっと、……すんな、今', '……締まる度に、奥、……っ', '……お前の中、波打っとる'],
+  high: ['……待て、……っ', '……出そう、だ……っ', '……締めるな、……今は余計に、……っ'],
+  hold: ['……待て、止まる。……出すなよ、今', '……っ、……落ち着くまで、動くな'],
+  resume: ['……よし。……続ける', '……今のは効いた。……覚えとけ'],
 };
-function say(txt){ voiceTxt.textContent = txt; }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-let dragging = false, lastY = 0, lastT = 0, vel = 0;
-stage.addEventListener('pointerdown', e => { dragging = true; lastY = e.clientY; lastT = performance.now(); stage.setPointerCapture(e.pointerId); hint.style.opacity = 0; ensureAudio(); });
-stage.addEventListener('pointerup', () => { dragging = false; });
-stage.addEventListener('pointercancel', () => { dragging = false; });
-stage.addEventListener('pointermove', e => {
-  if (!dragging) return;
-  const st = window._st; if (st.finished || st.lock > 0) return;
-  const now = performance.now(), dt = Math.max(1, now - lastT);
-  const dy = lastY - e.clientY; // 上へ動かす＝深く
-  lastY = e.clientY; lastT = now;
-  const v = dy / dt * 1000; // px/s (正=挿入方向)
-  vel = vel * 0.6 + Math.abs(v) * 0.4;
-  const dDepth = dy / (S.tubeH * 0.98);
-  const prev = st.depth;
-  st.depth = Math.max(0, Math.min(1, st.depth + dDepth));
-  st.still = 0;
-  // ストローク数：方向転換を数える
-  const dir = Math.sign(v);
-  if (dir !== 0 && st.lastDir !== 0 && dir !== st.lastDir && Math.abs(st.depth - st.turnDepth) > 0.18){
-    if (dir < 0){ st.strokes++; cStroke.textContent = st.strokes; } // 抜く側への転換で1往復
-    st.turnDepth = st.depth;
-  }
-  if (dir !== 0) st.lastDir = dir;
-  // 興奮：動いた距離 × 深さ係数 × 速度帯
-  const dist = Math.abs(st.depth - prev);
-  const depthW = 0.55 + st.depth * 0.95;
-  const speedW = vel < 60 ? 0.25 : vel < 300 ? 0.8 : vel < 700 ? 1.25 : vel < 1000 ? 0.9 : 0.45;
-  st.excite += dist * 46 * depthW * speedW;
-  st.wet = Math.min(1, st.wet + dist * 0.6);
-  // 奥ヒット
-  if (st.depth > 0.93 && prev <= 0.93 && st.deepHitCd <= 0){
-    st.excite += 2.2; st.deepHitCd = 1.4;
-    say(pick(LINES.deep)); gasp(0.5 + st.excite/200);
-    logEl.textContent = '奥に届いた。彼の腹筋が跳ねる。';
-  }
-  // 速すぎ
-  if (vel > 1050) st.fastTime += dt/1000; else st.fastTime = Math.max(0, st.fastTime - dt/500);
-  if (st.fastTime > 1.1 && st.excite > 25){
-    st.lock = 1.2; st.excite = Math.max(4, st.excite - 7); st.fastTime = 0;
-    say('……速すぎる。腰、押さえた');
-    logEl.textContent = '彼の手が腰に回って、動きを止められた。少し落とせ。';
-    gasp(0.4);
-  }
-  place();
-});
-stage.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+/* ---- 彼の動き：モード切替つき自動ストローク ---- */
+const MODES = {
+  shallow: { mid: 0.30, amp: 0.20, label: 'ゆっくり' },
+  build:   { mid: 0.55, amp: 0.34, label: 'ふつう' },
+  deep:    { mid: 0.78, amp: 0.22, label: '深く' },
+  hard:    { mid: 0.70, amp: 0.30, label: '荒い' },
+};
+function nextMode(){
+  const b = st.excite;
+  const table = b < 30 ? ['shallow','build','build'] : b < 55 ? ['build','build','deep','shallow']
+    : b < 82 ? ['build','deep','deep','hard'] : ['deep','hard','hard'];
+  st.mode = pick(table); st.modeStrokes = 0;
+  if (st.mode === 'deep' && st.deepCd <= 0){ st.deepCd = 6; say(pick(LINES.deep)); gasp(0.5); }
+}
 
-function bandOf(e){ return e < 30 ? 0 : e < 55 ? 1 : e < 82 ? 2 : 3; }
-const tubeInner = document.getElementById('tubeInner');
-const SQ_LINES = ['……っ、中、締め付けてくる', '……きゅっと、……すんな', '……締まる度に、奥、……っ', '……お前の中、波打っとる'];
-setInterval(() => {
-  const st = window._st; if (!st) return;
-  const now = performance.now();
-  if (st.lock > 0) st.lock -= 0.1;
-  if (st.deepHitCd > 0) st.deepHitCd -= 0.1;
-  if (st.sqLineCd > 0) st.sqLineCd -= 0.1;
-  if (!dragging || vel < 30) st.still += 0.1; else st.still = 0;
-  vel *= 0.82;
-  /* ---- 筒の収縮（きゅ、きゅ）：興奮で速く・強く。フィニッシュ時は脈動同期 ---- */
+let lastTs = 0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  if (!lastTs) lastTs = ts;
+  const dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
+  if (!S) return;
   const a01 = Math.max(0, Math.min(1, st.excite / 100));
-  const rate = st.finished ? 0 : 0.45 + a01 * 1.5;            // Hz相当
-  st.phase += rate * 0.1 * Math.PI * 2;
-  const wave = Math.pow(Math.max(0, Math.sin(st.phase)), 2.2); // 締まる時だけ鋭い波形
-  const amp = st.finished ? st.finishPulse : 0.25 + a01 * 0.75;
-  st.squeeze = wave * amp;
+
+  /* 締め（ユーザー）：長押しで上昇、疲労で減衰、離すと回復 */
+  if (st.holding){ st.holdTime += dt; st.fatigue = Math.max(0.35, 1 - Math.max(0, st.holdTime - 3.5) * 0.22); }
+  else { st.holdTime = 0; st.fatigue = Math.min(1, st.fatigue + dt * 0.25); }
+  const sqTarget = st.holding ? st.fatigue : 0;
+  st.userSq += (sqTarget - st.userSq) * Math.min(1, dt * 7);
+
+  /* 筒の自発収縮（きゅ、きゅ） */
+  st.autoPhase += (0.45 + a01 * 1.5) * dt * Math.PI * 2;
+  const autoWave = Math.pow(Math.max(0, Math.sin(st.autoPhase)), 2.2) * (st.finished ? st.finishPulse : 0.25 + a01 * 0.75);
+  st.squeeze = Math.max(autoWave, st.userSq);
   const sq = st.squeeze;
+
+  /* 彼の動き */
+  let tipVel = 0;
+  if (!st.finished){
+    if (st.holdT > 0){
+      // 寸止めの静止：奥で止まって脈打つ
+      st.holdT -= dt;
+      st.depth += (0.88 - st.depth) * dt * 3;
+      if (st.holdT <= 0){ say(pick(LINES.resume)); }
+    } else if (st.restT > 0){
+      st.restT -= dt;
+      st.depth += (0.18 - st.depth) * dt * 2.2; // 休みは浅く抜け気味で
+    } else {
+      const M = MODES[st.mode];
+      const tempo = (0.45 + a01 * 1.25) * (st.mode === 'hard' ? 1.3 : 1);
+      const prevPhase = st.phase;
+      st.phase += tempo * dt * Math.PI * 2;
+      const s = Math.sin(st.phase);
+      const shaped = Math.sign(s) * Math.pow(Math.abs(s), 0.8);
+      const prevDepth = st.depth;
+      st.depth = Math.max(0.02, Math.min(1, M.mid + shaped * M.amp));
+      tipVel = Math.abs(st.depth - prevDepth) / Math.max(dt, 0.001);
+      if (Math.floor(st.phase / (Math.PI * 2)) > Math.floor(prevPhase / (Math.PI * 2))){
+        st.strokes++; st.modeStrokes++;
+        // 1ストロークごとの効き：深さ×締め
+        st.excite += (0.35 + M.mid * 0.85) * (1 + sq * 1.1);
+        st.wet = Math.min(1, st.wet + 0.012);
+        if (st.modeStrokes >= 4 + Math.floor(Math.random() * 4)){
+          if (Math.random() < 0.22 && st.excite < 70){ st.restT = 1.1 + Math.random() * 0.9; st.modeStrokes = 0; }
+          else nextMode();
+        }
+        // 奥ヒット
+        if (st.depth > 0.95 && st.deepCd <= 0){ st.deepCd = 5; st.excite += 1.6; say(pick(LINES.deep)); gasp(0.55); logEl.textContent = '奥まで届いた拍子に、彼の息が詰まる。'; }
+      }
+      // 締めの継続効果（動いている間も、締めが強いと上乗せ）
+      if (sq > 0.55 && st.depth > 0.5) st.excite += dt * (sq - 0.4) * 3.2;
+      if (sq > 0.82 && st.depth > 0.6 && st.sqLineCd <= 0 && st.excite > 40){
+        st.sqLineCd = 7; say(pick(st.excite > 80 ? LINES.high : LINES.sq)); gasp(0.5);
+        logEl.textContent = st.holding ? 'あんたの締めに、彼の声が漏れた。' : '筒の収縮が強く締まった。';
+      }
+    }
+    // 寸止め：高帯で彼は自分で止まる。止まっている間に締めると「溜まり」
+    if (st.excite >= 82 && st.holdT <= 0 && !st.holdUsed){
+      st.holdT = 2.4; st.holdUsed = true;
+      say(pick(LINES.hold)); breathHold();
+      logEl.textContent = '限界が近づいて、彼が奥で止まった。今、締めると――';
+    }
+    if (st.holdT > 0 && st.userSq > 0.55 && !st.holdScored){
+      st.holdScored = true; st.charge = Math.min(5, st.charge + 1); cCharge.textContent = st.charge;
+      st.excite = 73; st.holdT = 0;
+      say('……っ、……いい。今のは、いい');
+      logEl.textContent = `止まっている間の締め。寸止め成立、溜まり ${st.charge}。`;
+      gasp(0.8);
+    }
+    if (st.holdT <= 0) st.holdScored = false;
+    if (st.excite < 76) st.holdUsed = false;
+    st.excite = Math.max(2, st.excite - dt * 0.35);
+    if (st.excite >= 100) finish();
+  }
+  if (st.deepCd > 0) st.deepCd -= dt;
+  if (st.sqLineCd > 0) st.sqLineCd -= dt;
+  if (st.finishPulse > 0) st.finishPulse = Math.max(0, st.finishPulse - dt * 1.4);
+
+  /* 見た目 */
   tubeInner.style.width = (76 - sq * 17) + 'px';
   tubeInner.style.borderColor = `rgba(229,139,177,${0.35 + sq * 0.5})`;
   shaft.style.transform = `translateX(-50%) scaleX(${1 - sq * 0.07 * (0.3 + st.depth)})`;
-  // 締め付けの効果：入っている間は、動かなくても少しずつ効く。動いていると上乗せ
-  if (!st.finished && st.depth > 0.35 && sq > 0.55){
-    st.excite += 0.14 + (vel > 60 ? 0.22 : 0);
-    if (sq > 0.8 && st.depth > 0.6 && st.sqLineCd <= 0 && st.excite > 45){
-      st.sqLineCd = 7; say(pick(SQ_LINES)); gasp(0.45);
-      logEl.textContent = '筒がきゅっと締まった。彼の声が漏れる。';
-    }
-  }
-  if (st.finishPulse > 0) st.finishPulse = Math.max(0, st.finishPulse - 0.09);
-  // 自然減衰と入口の熱
-  if (!st.finished){
-    st.excite = Math.max(2, st.excite - (st.still > 0.4 ? 0.55 : 0.16));
-    const heat = Math.min(1, vel / 800);
-    rimHot.style.opacity = Math.max(heat * 0.85, sq * 0.55);
-    rim.style.transform = `translateX(-50%) scaleX(${1 - Math.min(0.16, vel/5200) - sq * 0.10})`;
-    wallGlow.style.opacity = 0.2 + st.excite/100 * 0.4 + sq * 0.3;
-    gloss.style.opacity = 0.2 + st.wet * 0.55;
-    // 寸止め判定：高帯で深いまま止める
-    if (st.excite >= 82 && st.depth > 0.6 && st.still > 1.6 && st.lock <= 0){
-      st.charge = Math.min(5, st.charge + 1); cCharge.textContent = st.charge;
-      st.excite = 74; st.still = 0;
-      say('……っ、止めるなって、……いや、……いい。今のは、いい');
-      logEl.textContent = `寸止め成立。溜まり ${st.charge}。奥で脈打つのが分かる。`;
-      breathHold();
-    }
-    // 定期台詞
-    const b = bandOf(st.excite);
-    if (now - st.lastLine > 4600 && st.lock <= 0){
-      st.lastLine = now;
-      if (b !== st.band){ st.band = b; gasp(0.3 + b * 0.2); }
-      if (dragging || b >= 2){
-        if (st.depth < 0.25 && st.excite > 35) say(pick(LINES.shallow));
-        else say(pick(b === 0 ? LINES.low : b === 1 ? LINES.mid : b === 2 ? LINES.mid : LINES.high));
-      }
-    }
-    if (st.excite >= 100){ finish(); }
-  }
-  // 呼吸の速さ表示用に現在のvel/exciteを音へ
-  audioTick(st);
-}, 100);
+  rimHot.style.opacity = Math.max(Math.min(1, tipVel * 0.8) * 0.7, sq * 0.5);
+  rim.style.transform = `translateX(-50%) scaleX(${1 - sq * 0.10 - Math.min(0.08, tipVel * 0.05)})`;
+  wallGlow.style.opacity = 0.2 + a01 * 0.4 + sq * 0.3;
+  gloss.style.opacity = 0.2 + st.wet * 0.55;
+  cMove.textContent = st.finished ? '余韻' : st.holdT > 0 ? '止まっている' : st.restT > 0 ? '休み' : MODES[st.mode].label;
+  cSq.textContent = st.userSq > 0.55 ? '強い' : st.userSq > 0.2 ? '締め中' : autoWave > 0.6 ? '自発・強' : autoWave > 0.3 ? '自発' : '―';
+  chipSq.classList.toggle('hot', st.userSq > 0.2);
+  place();
+  audioTick(tipVel);
+}
+requestAnimationFrame(frame);
+
+/* 定期台詞 */
+setInterval(() => {
+  if (st.finished || st.holdT > 0) return;
+  const now = performance.now();
+  if (now - st.lastLine < 5200) return;
+  st.lastLine = now;
+  const b = st.excite < 30 ? 0 : st.excite < 55 ? 1 : st.excite < 82 ? 2 : 3;
+  if (b !== st.band){ st.band = b; gasp(0.3 + b * 0.18); }
+  if (!st.started){ st.started = true; say(pick(LINES.start)); return; }
+  say(pick(b === 0 ? LINES.shallow : b === 1 ? LINES.build : b === 2 ? LINES.build : LINES.high));
+}, 900);
+
+/* 入力：押し続ける＝締める */
+stage.addEventListener('pointerdown', e => { st.holding = true; stage.setPointerCapture(e.pointerId); hint.style.opacity = 0; ensureAudio(); });
+const release = () => { st.holding = false; };
+stage.addEventListener('pointerup', release);
+stage.addEventListener('pointercancel', release);
+stage.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
 function finish(){
-  const st = window._st; st.finished = true;
+  st.finished = true;
   say('……出る、……っ');
-  logEl.textContent = '奥で脈打ち始めた。';
+  logEl.textContent = '奥で脈打ち始めた。締めるたびに、絞られる。';
   let n = 0; const total = 7;
   const iv = setInterval(() => {
-    n++; gasp(0.55); st.finishPulse = 1; // 脈動のたびに筒がきゅっと締まる
+    n++; gasp(0.55); st.finishPulse = 1;
     rimHot.style.opacity = 0.9; setTimeout(() => rimHot.style.opacity = 0.2, 160);
     logEl.textContent = `脈動 ${n} ― 奥に放たれている。` + (st.charge >= 3 ? '溜まりの分、量が多い。' : st.charge >= 1 ? 'いつもより多い。' : '');
     if (n >= total){ clearInterval(iv);
@@ -254,7 +285,7 @@ function finish(){
   }, 620);
 }
 
-/* ---- 音（合成）：息＋濡れた摩擦音。音量はgrip調整版に準拠 ---- */
+/* ---- 音（合成）：息＋彼の動きに連動する摩擦音 ---- */
 let AC = null, breathGain, breathLfo, breathLfoGain, fricGain, soundOn = true, holdUntil = 0;
 function ensureAudio(){
   if (AC || !soundOn) return;
@@ -276,14 +307,14 @@ function ensureAudio(){
     breathLfo.connect(breathLfoGain); breathLfoGain.connect(breathGain.gain); breathLfo.start();
   }catch(e){}
 }
-function audioTick(st){
+function audioTick(tipVel){
   if (!AC) return;
   const t = AC.currentTime, a = Math.max(0, Math.min(1, st.excite/100));
-  if (t < holdUntil){ breathGain.gain.setTargetAtTime(0, t, 0.05); return; }
+  if (t < holdUntil){ breathGain.gain.setTargetAtTime(0, t, 0.05); fricGain.gain.setTargetAtTime(0, t, 0.05); return; }
   breathLfo.frequency.setTargetAtTime(0.24 + a * 0.85, t, 0.3);
   breathGain.gain.setTargetAtTime(0.009 + a * 0.030, t, 0.3);
   breathLfoGain.gain.setTargetAtTime(0.012 + a * 0.06, t, 0.3);
-  fricGain.gain.setTargetAtTime(Math.min(0.05, vel / 16000), t, 0.08);
+  fricGain.gain.setTargetAtTime(Math.min(0.05, tipVel * 0.028), t, 0.06);
 }
 function gasp(v){
   if (!AC) return; const t = AC.currentTime;
