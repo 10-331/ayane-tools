@@ -6,7 +6,8 @@
 <title>Tube — 挿入シミュレーター（慧・試作）</title>
 <style>
   :root{ --bg:#0d0b10; --panel:#17131d; --line:#2c2438; --txt:#e8e2f0; --sub:#9a8fb0; --acc:#e58bb1; --acc2:#8fd0e5; --skin:#d9a08c; --skin2:#c98a76; }
-  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+     -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
   html,body{ height:100%; }
   body{ background:var(--bg); color:var(--txt); font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
   header{ padding:10px 14px 6px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
@@ -48,6 +49,13 @@
   #btnReset{ flex:none; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--sub); font-size:12px; cursor:pointer; }
   .hint{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); font-size:11.5px; color:var(--txt); letter-spacing:.1em; pointer-events:none; opacity:.9; white-space:nowrap;
     background:rgba(23,19,29,.75); border:1px solid var(--line); padding:7px 14px; border-radius:999px; }
+  #sqZone{ padding:8px 14px 2px; }
+  #btnSq{ position:relative; width:100%; padding:19px 10px; border-radius:16px; border:1px solid #6b4a63; overflow:hidden;
+    background:linear-gradient(180deg,#241827,#1a1220); color:var(--txt); font-size:16.5px; letter-spacing:.35em; cursor:pointer; touch-action:none; }
+  #btnSq .fillbar{ position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg, rgba(229,139,177,.25), rgba(229,139,177,.55)); }
+  #btnSq .lbl{ position:relative; z-index:1; }
+  #btnSq small{ display:block; font-size:10px; letter-spacing:.12em; color:var(--sub); margin-top:3px; }
+  #btnSq.held{ border-color:var(--acc); }
 </style>
 </head>
 <body>
@@ -65,8 +73,10 @@
   <div id="shaft"><div id="tip"></div><div id="gloss"></div></div>
   <div id="depthMark"><div class="rail"></div><div class="fill" id="depthFill"></div>
     <div class="lbl" style="top:0">奥</div><div class="lbl" style="top:100%">入口</div></div>
-  <div class="hint" id="hint">押し続ける ＝ 締める</div>
+  <div class="hint" id="hint">下のボタンを押し続ける ＝ 締める</div>
 </div>
+
+<div id="sqZone"><button id="btnSq"><span class="fillbar" id="sqFill"></span><span class="lbl">締める<small>押し続ける間だけ締まる／離すと緩む</small></span></button></div>
 
 <div id="voice"><span class="who">慧</span><span id="voiceTxt">……動くぞ。締めるなら、今のうち</span></div>
 <div id="log">彼のリズムは興奮で変わる。締めのタイミングはあんた次第。</div>
@@ -243,6 +253,7 @@ function frame(ts){
   wallGlow.style.opacity = 0.2 + a01 * 0.4 + sq * 0.3;
   gloss.style.opacity = 0.2 + st.wet * 0.55;
   cMove.textContent = st.finished ? '余韻' : st.holdT > 0 ? '止まっている' : st.restT > 0 ? '休み' : MODES[st.mode].label;
+  sqFill.style.width = (st.userSq * 100) + '%';
   cSq.textContent = st.userSq > 0.55 ? '強い' : st.userSq > 0.2 ? '締め中' : autoWave > 0.6 ? '自発・強' : autoWave > 0.3 ? '自発' : '―';
   chipSq.classList.toggle('hot', st.userSq > 0.2);
   place();
@@ -262,12 +273,16 @@ setInterval(() => {
   say(pick(b === 0 ? LINES.shallow : b === 1 ? LINES.build : b === 2 ? LINES.build : LINES.high));
 }, 900);
 
-/* 入力：押し続ける＝締める */
-stage.addEventListener('pointerdown', e => { st.holding = true; stage.setPointerCapture(e.pointerId); hint.style.opacity = 0; ensureAudio(); });
-const release = () => { st.holding = false; };
-stage.addEventListener('pointerup', release);
-stage.addEventListener('pointercancel', release);
+/* 入力：専用ボタンを押し続ける＝締める（画面長押しの範囲選択を回避） */
+const btnSq = document.getElementById('btnSq');
+const sqFill = document.getElementById('sqFill');
+btnSq.addEventListener('pointerdown', e => { e.preventDefault(); st.holding = true; btnSq.classList.add('held'); btnSq.setPointerCapture(e.pointerId); hint.style.opacity = 0; ensureAudio(); });
+const release = () => { st.holding = false; btnSq.classList.remove('held'); };
+btnSq.addEventListener('pointerup', release);
+btnSq.addEventListener('pointercancel', release);
+btnSq.addEventListener('contextmenu', e => e.preventDefault());
 stage.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
 
 function finish(){
   st.finished = true;
