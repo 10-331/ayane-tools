@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Tube — 挿入シミュレーター（慧・試作）</title>
+<style>
+  :root{ --bg:#0d0b10; --panel:#17131d; --line:#2c2438; --txt:#e8e2f0; --sub:#9a8fb0; --acc:#e58bb1; --acc2:#8fd0e5; --skin:#d9a08c; --skin2:#c98a76; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--txt); font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+  header{ padding:10px 14px 6px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  h1{ font-size:16px; letter-spacing:.16em; font-weight:600; }
+  h1 small{ display:block; font-size:10.5px; color:var(--sub); letter-spacing:.04em; margin-top:3px; font-weight:400; line-height:1.6; }
+  #btnSound{ flex:none; padding:7px 12px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--sub); font-size:11.5px; cursor:pointer; }
+  #btnSound.on{ color:var(--txt); border-color:var(--acc); }
+  #stage{ position:relative; flex:1; touch-action:none; overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 0%, #181221 0%, #0d0b10 60%); }
+  /* 筒（つつ）：∩型のアーチ。入口が下、奥が上 */
+  #tubeWrap{ position:absolute; left:50%; top:4%; transform:translateX(-50%); width:170px; height:62%; pointer-events:none; }
+  #tubeOuter{ position:absolute; inset:0; border:3px solid #4a3a56; border-bottom:none; border-radius:90px 90px 0 0;
+    background:linear-gradient(180deg, rgba(229,139,177,0.05), rgba(229,139,177,0.13) 75%, rgba(229,139,177,0.20)); }
+  #tubeInner{ position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:76px; height:100%;
+    border-left:2px solid rgba(229,139,177,.35); border-right:2px solid rgba(229,139,177,.35);
+    border-top:2px solid rgba(229,139,177,.35); border-radius:40px 40px 0 0;
+    background:linear-gradient(180deg, rgba(20,12,20,.25), rgba(60,20,40,.35)); overflow:hidden; }
+  #wallGlow{ position:absolute; inset:0; background:radial-gradient(60% 40% at 50% 100%, rgba(229,139,177,.5), transparent 70%); opacity:.25; }
+  #rim{ position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:92px; height:20px; border-radius:50%;
+    border:3px solid #6b4a63; background:radial-gradient(50% 60% at 50% 40%, #3a2233, #241423); transition:transform .08s; z-index:3; }
+  #rimHot{ position:absolute; inset:-3px; border-radius:50%; border:3px solid var(--acc); opacity:0; }
+  /* 竿 */
+  #shaft{ position:absolute; left:50%; width:64px; transform:translateX(-50%); z-index:2;
+    background:linear-gradient(90deg, var(--skin2), var(--skin) 30%, #e2b09c 50%, var(--skin) 70%, var(--skin2));
+    border-radius:32px 32px 10px 10px; box-shadow:inset 0 -14px 22px rgba(90,40,30,.35); }
+  #gloss{ position:absolute; left:16%; top:4%; width:20%; height:88%; border-radius:999px;
+    background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.06)); opacity:.25; }
+  #tip{ position:absolute; left:50%; top:-4px; transform:translateX(-50%); width:66px; height:34px; border-radius:50% 50% 46% 46%;
+    background:radial-gradient(60% 70% at 50% 30%, #e8b3a0, #cf8f79); box-shadow:inset 0 -6px 10px rgba(120,50,40,.35); }
+  #depthMark{ position:absolute; right:calc(50% + 105px); top:4%; height:62%; width:34px; pointer-events:none; }
+  #depthMark .rail{ position:absolute; right:8px; top:0; bottom:0; width:2px; background:#332a40; }
+  #depthMark .fill{ position:absolute; right:8px; bottom:0; width:2px; background:var(--acc2); }
+  #depthMark .lbl{ position:absolute; right:14px; font-size:9.5px; color:var(--sub); transform:translateY(-50%); white-space:nowrap; }
+  #voice{ min-height:52px; padding:8px 16px 2px; text-align:center; font-size:16.5px; letter-spacing:.03em; line-height:1.55; }
+  #voice .who{ display:block; font-size:10px; color:var(--sub); letter-spacing:.3em; margin-bottom:2px; }
+  #log{ height:34px; overflow:hidden; text-align:center; font-size:11.5px; color:var(--sub); line-height:1.5; padding:0 14px; }
+  footer{ padding:6px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:8px; align-items:center; }
+  .chip{ flex:1; text-align:center; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 4px; font-size:11px; color:var(--sub); }
+  .chip b{ display:block; font-size:14.5px; color:var(--txt); font-variant-numeric:tabular-nums; }
+  #btnReset{ flex:none; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--sub); font-size:12px; cursor:pointer; }
+  .hint{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); font-size:11px; color:var(--sub); letter-spacing:.08em; pointer-events:none; opacity:.85; white-space:nowrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>TUBE<small>筒（∩）に対して抜き差しする挿入シミュレーター／慧・試作<br>上下にドラッグ。深さと速さで反応が変わる</small></h1>
+  <button id="btnSound">音 OFF</button>
+</header>
+
+<div id="stage">
+  <div id="tubeWrap">
+    <div id="tubeOuter"></div>
+    <div id="tubeInner"><div id="wallGlow"></div></div>
+    <div id="rim"><div id="rimHot"></div></div>
+  </div>
+  <div id="shaft"><div id="tip"></div><div id="gloss"></div></div>
+  <div id="depthMark"><div class="rail"></div><div class="fill" id="depthFill"></div>
+    <div class="lbl" style="top:0">奥</div><div class="lbl" style="top:100%">入口</div></div>
+  <div class="hint" id="hint">ドラッグで抜き差し</div>
+</div>
+
+<div id="voice"><span class="who">慧</span><span id="voiceTxt">……入れるぞ。ゆっくりな</span></div>
+<div id="log">深さ・速さ・止め方で、彼の声と行動が変わる。奥まで届くと反応が跳ねる。</div>
+
+<footer>
+  <div class="chip">深さ<b id="cDepth">0%</b></div>
+  <div class="chip">ストローク<b id="cStroke">0</b></div>
+  <div class="chip">溜まり<b id="cCharge">0</b></div>
+  <button id="btnReset">最初から</button>
+</footer>
+
+<script>
+const stage = document.getElementById('stage');
+const shaft = document.getElementById('shaft');
+const rim = document.getElementById('rim');
+const rimHot = document.getElementById('rimHot');
+const wallGlow = document.getElementById('wallGlow');
+const gloss = document.getElementById('gloss');
+const voiceTxt = document.getElementById('voiceTxt');
+const logEl = document.getElementById('log');
+const hint = document.getElementById('hint');
+const cDepth = document.getElementById('cDepth'), cStroke = document.getElementById('cStroke'), cCharge = document.getElementById('cCharge');
+const depthFill = document.getElementById('depthFill');
+
+let S = null;
+function layout(){
+  const r = stage.getBoundingClientRect();
+  const tubeH = r.height * 0.62, tubeTop = r.height * 0.04;
+  const shaftLen = tubeH * 1.12;
+  shaft.style.height = shaftLen + 'px';
+  S = { H: r.height, tubeTop, tubeH, shaftLen, rimY: tubeTop + tubeH };
+}
+function reset(){
+  layout();
+  window._st = { depth: 0, target: 0, excite: 4, charge: 0, strokes: 0, lastDir: 0, turnDepth: 0,
+    still: 0, fastTime: 0, lock: 0, finished: false, pulses: 0, deepHitCd: 0, lastLine: 0, band: 0, wet: 0.15 };
+  voiceTxt.textContent = '……入れるぞ。ゆっくりな';
+  logEl.textContent = '深さ・速さ・止め方で、彼の声と行動が変わる。奥まで届くと反応が跳ねる。';
+  place();
+}
+function place(){
+  const st = window._st;
+  // depth 0 = 先端が入口の手前, 1 = 根元まで
+  const tipTravel = S.tubeH * 0.98;
+  const tipY = S.rimY + 26 - st.depth * tipTravel; // 先端のY
+  shaft.style.top = (tipY) + 'px';
+  depthFill.style.height = (st.depth * 100) + '%';
+  cDepth.textContent = Math.round(st.depth * 100) + '%';
+}
+
+const LINES = {
+  low:  ['……ゆっくりな', '……そう、その調子', '……浅いぞ', '……もっと奥まで来い'],
+  mid:  ['……っ、いい', '……深いな、お前', '……その速さ、悪くない', '……っ、奥、効く'],
+  high: ['……待て、……っ', '……奥ばっか、狙うな……っ', '……出そう、だ……っ', '……止めるな、……今は'],
+  deep: ['……っ、奥……！', '……そこ、……深すぎる', '……届いとる、……っ'],
+  shallow: ['……抜けそうだぞ', '……浅い。もっと入れろ'],
+};
+function say(txt){ voiceTxt.textContent = txt; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+let dragging = false, lastY = 0, lastT = 0, vel = 0;
+stage.addEventListener('pointerdown', e => { dragging = true; lastY = e.clientY; lastT = performance.now(); stage.setPointerCapture(e.pointerId); hint.style.opacity = 0; ensureAudio(); });
+stage.addEventListener('pointerup', () => { dragging = false; });
+stage.addEventListener('pointercancel', () => { dragging = false; });
+stage.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const st = window._st; if (st.finished || st.lock > 0) return;
+  const now = performance.now(), dt = Math.max(1, now - lastT);
+  const dy = lastY - e.clientY; // 上へ動かす＝深く
+  lastY = e.clientY; lastT = now;
+  const v = dy / dt * 1000; // px/s (正=挿入方向)
+  vel = vel * 0.6 + Math.abs(v) * 0.4;
+  const dDepth = dy / (S.tubeH * 0.98);
+  const prev = st.depth;
+  st.depth = Math.max(0, Math.min(1, st.depth + dDepth));
+  st.still = 0;
+  // ストローク数：方向転換を数える
+  const dir = Math.sign(v);
+  if (dir !== 0 && st.lastDir !== 0 && dir !== st.lastDir && Math.abs(st.depth - st.turnDepth) > 0.18){
+    if (dir < 0){ st.strokes++; cStroke.textContent = st.strokes; } // 抜く側への転換で1往復
+    st.turnDepth = st.depth;
+  }
+  if (dir !== 0) st.lastDir = dir;
+  // 興奮：動いた距離 × 深さ係数 × 速度帯
+  const dist = Math.abs(st.depth - prev);
+  const depthW = 0.55 + st.depth * 0.95;
+  const speedW = vel < 60 ? 0.25 : vel < 300 ? 0.8 : vel < 700 ? 1.25 : vel < 1000 ? 0.9 : 0.45;
+  st.excite += dist * 46 * depthW * speedW;
+  st.wet = Math.min(1, st.wet + dist * 0.6);
+  // 奥ヒット
+  if (st.depth > 0.93 && prev <= 0.93 && st.deepHitCd <= 0){
+    st.excite += 2.2; st.deepHitCd = 1.4;
+    say(pick(LINES.deep)); gasp(0.5 + st.excite/200);
+    logEl.textContent = '奥に届いた。彼の腹筋が跳ねる。';
+  }
+  // 速すぎ
+  if (vel > 1050) st.fastTime += dt/1000; else st.fastTime = Math.max(0, st.fastTime - dt/500);
+  if (st.fastTime > 1.1 && st.excite > 25){
+    st.lock = 1.2; st.excite = Math.max(4, st.excite - 7); st.fastTime = 0;
+    say('……速すぎる。腰、押さえた');
+    logEl.textContent = '彼の手が腰に回って、動きを止められた。少し落とせ。';
+    gasp(0.4);
+  }
+  place();
+});
+stage.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+function bandOf(e){ return e < 30 ? 0 : e < 55 ? 1 : e < 82 ? 2 : 3; }
+setInterval(() => {
+  const st = window._st; if (!st) return;
+  const now = performance.now();
+  if (st.lock > 0) st.lock -= 0.1;
+  if (st.deepHitCd > 0) st.deepHitCd -= 0.1;
+  if (!dragging || vel < 30) st.still += 0.1; else st.still = 0;
+  vel *= 0.82;
+  // 自然減衰と入口の熱
+  if (!st.finished){
+    st.excite = Math.max(2, st.excite - (st.still > 0.4 ? 0.55 : 0.16));
+    const heat = Math.min(1, vel / 800);
+    rimHot.style.opacity = heat * 0.85;
+    rim.style.transform = `translateX(-50%) scaleX(${1 - Math.min(0.16, vel/5200)})`;
+    wallGlow.style.opacity = 0.2 + st.excite/100 * 0.55;
+    gloss.style.opacity = 0.2 + st.wet * 0.55;
+    // 寸止め判定：高帯で深いまま止める
+    if (st.excite >= 82 && st.depth > 0.6 && st.still > 1.6 && st.lock <= 0){
+      st.charge = Math.min(5, st.charge + 1); cCharge.textContent = st.charge;
+      st.excite = 74; st.still = 0;
+      say('……っ、止めるなって、……いや、……いい。今のは、いい');
+      logEl.textContent = `寸止め成立。溜まり ${st.charge}。奥で脈打つのが分かる。`;
+      breathHold();
+    }
+    // 定期台詞
+    const b = bandOf(st.excite);
+    if (now - st.lastLine > 4600 && st.lock <= 0){
+      st.lastLine = now;
+      if (b !== st.band){ st.band = b; gasp(0.3 + b * 0.2); }
+      if (dragging || b >= 2){
+        if (st.depth < 0.25 && st.excite > 35) say(pick(LINES.shallow));
+        else say(pick(b === 0 ? LINES.low : b === 1 ? LINES.mid : b === 2 ? LINES.mid : LINES.high));
+      }
+    }
+    if (st.excite >= 100){ finish(); }
+  }
+  // 呼吸の速さ表示用に現在のvel/exciteを音へ
+  audioTick(st);
+}, 100);
+
+function finish(){
+  const st = window._st; st.finished = true;
+  say('……出る、……っ');
+  logEl.textContent = '奥で脈打ち始めた。';
+  let n = 0; const total = 7;
+  const iv = setInterval(() => {
+    n++; gasp(0.55);
+    rimHot.style.opacity = 0.9; setTimeout(() => rimHot.style.opacity = 0.2, 160);
+    logEl.textContent = `脈動 ${n} ― 奥に放たれている。` + (st.charge >= 3 ? '溜まりの分、量が多い。' : st.charge >= 1 ? 'いつもより多い。' : '');
+    if (n >= total){ clearInterval(iv);
+      say('……はぁ、……っ。……抜くな、まだ');
+      logEl.textContent = '終わった。余韻：しばらくこのままがいいらしい。「最初から」で戻る。';
+    }
+  }, 620);
+}
+
+/* ---- 音（合成）：息＋濡れた摩擦音。音量はgrip調整版に準拠 ---- */
+let AC = null, breathGain, breathLfo, breathLfoGain, fricGain, soundOn = true, holdUntil = 0;
+function ensureAudio(){
+  if (AC || !soundOn) return;
+  try{
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+    let last = 0; for (let i = 0; i < len; i++){ const w = Math.random()*2-1; last = (last + 0.035*w)/1.035; d[i] = last*3.4; }
+    const mk = (freq, q) => {
+      const src = AC.createBufferSource(); src.buffer = buf; src.loop = true; src.playbackRate.value = 0.9 + Math.random()*0.2;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+      const g = AC.createGain(); g.gain.value = 0;
+      src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+      return g;
+    };
+    breathGain = mk(650, 0.6);
+    fricGain = mk(1500, 0.8);
+    breathLfo = AC.createOscillator(); breathLfo.frequency.value = 0.3;
+    breathLfoGain = AC.createGain(); breathLfoGain.gain.value = 0;
+    breathLfo.connect(breathLfoGain); breathLfoGain.connect(breathGain.gain); breathLfo.start();
+  }catch(e){}
+}
+function audioTick(st){
+  if (!AC) return;
+  const t = AC.currentTime, a = Math.max(0, Math.min(1, st.excite/100));
+  if (t < holdUntil){ breathGain.gain.setTargetAtTime(0, t, 0.05); return; }
+  breathLfo.frequency.setTargetAtTime(0.24 + a * 0.85, t, 0.3);
+  breathGain.gain.setTargetAtTime(0.009 + a * 0.030, t, 0.3);
+  breathLfoGain.gain.setTargetAtTime(0.012 + a * 0.06, t, 0.3);
+  fricGain.gain.setTargetAtTime(Math.min(0.05, vel / 16000), t, 0.08);
+}
+function gasp(v){
+  if (!AC) return; const t = AC.currentTime;
+  breathGain.gain.cancelScheduledValues(t);
+  breathGain.gain.setValueAtTime(0.075 * v + 0.05, t);
+  breathGain.gain.exponentialRampToValueAtTime(0.012, t + 0.4);
+}
+function breathHold(){
+  if (!AC) return; holdUntil = AC.currentTime + 1.3;
+  setTimeout(() => { if (AC) gasp(0.9); }, 1350);
+}
+const btnSound = document.getElementById('btnSound');
+btnSound.classList.add('on'); btnSound.textContent = '音 ON';
+btnSound.addEventListener('click', () => {
+  soundOn = !soundOn;
+  btnSound.classList.toggle('on', soundOn);
+  btnSound.textContent = soundOn ? '音 ON' : '音 OFF';
+  if (!soundOn && AC){ AC.close(); AC = null; } else if (soundOn){ ensureAudio(); }
+});
+document.getElementById('btnReset').addEventListener('click', reset);
+window.addEventListener('resize', () => { layout(); place(); });
+reset();
+</script>
+</body>
+</html>
